@@ -41,6 +41,10 @@ def ordered_dithering(image):
     return Image.fromarray(dithered_image_array)
 
 def auto_lvl(image):
+    # handle case where image is using a different encoding scheme
+    if image.mode == "P":
+        image = image.convert("RGB")
+
     image_array = np.array(image)
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
@@ -53,8 +57,23 @@ def auto_lvl(image):
         df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue']).astype(int)
     elif (channels == 4):
         df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue', 'alpha']).astype(int)
+    elif (channels == 1):
+        df = pd.DataFrame(reshaped, columns=['intensity']).astype(int)
+        max_intensity = df['intensity'].max()
+        min_intensity = df['intensity'].min()
+
+        intensity_factor = 255 / (max_intensity - min_intensity)
+
+        # Apply the adjustment and clip the values
+        df['intensity'] = (df['intensity'] - min_intensity) * intensity_factor
+        df['intensity'] = df['intensity'].clip(0, 255)
+
+        # Convert back to numpy array and reshape
+        new_reshaped = df.to_numpy(dtype=np.uint8)
+        auto_lvl_array = new_reshaped.reshape(height, width, channels)
+        return Image.fromarray(auto_lvl_array)
     else:
-        print("Given image does not have three or four channels, return original image")
+        print("Given image does not have three, four, or one channels, return original image")
         return image
 
     # find the max and min for each colour channel
@@ -87,6 +106,10 @@ def auto_lvl(image):
     return Image.fromarray(auto_lvl_array)
     
 def saturation(image):
+    # handle case where image is using a different encoding scheme
+    if image.mode == "P":
+        image = image.convert("RGB")
+
     image_array = np.array(image)
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
@@ -98,6 +121,7 @@ def saturation(image):
         df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue']).astype(int)
     elif (channels == 4):
         df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue', 'alpha']).astype(int)
+    # no need to check for greyscale image because you cannot saturate a grey image
     else:
         print("Given image does not have three or four channels, return original image")
         return image
@@ -135,6 +159,10 @@ def brighten(image):
     return Image.fromarray(image_array)
 
 def interlace(image):
+    # handle case where image is using a different encoding scheme
+    if image.mode == "P":
+        image = image.convert("RGB")
+
     image_array = np.array(image)
         
     # Get the shape of the image array (height, width, channels)
@@ -149,11 +177,14 @@ def interlace(image):
     odd_mask = df.index % 2 != 0
 
     # set every odd row to 0
-    if channels == 3:
+    if (channels == 3 or channels == 1):
         df.loc[odd_mask, :] = 0
     elif channels == 4:
         cols_to_modify = [col for col in df.columns if (col + 1) % 4 != 0]
         df.loc[odd_mask, cols_to_modify] = 0
+    else:
+        return image
+
 
     new_reshaped = df.to_numpy(dtype=np.uint8)
     interlaced_arary = new_reshaped.reshape(height, width, channels)
