@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modified Image Display</title>
+    <style>
+        .image-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-container img {
+            max-width: 300px;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Original and Modified Images</h1>
+    <div class="image-container">
+        <div>
+            <h3>Original Image:</h3>
+            <img src="{{ url_for('static', filename='uploads/' + original_image) }}" alt="Original Image">
+        </div>
+        <div>
+            <h3>Modified Image:</h3>
+            <img src="{{ url_for('static', filename='uploads/' + modified_image) }}" alt="Modified Image">
+        </div>
+    </div>
+    <br>
+    <a href="/">Upload Another Image</a>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload to Greyscale</title>
+</head>
+<body>
+    <h1>Upload an Image to Modify</h1>
+    <form action="/" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <select name="operation" id="operation">
+            <option value="greyscale">Greyscale</option>
+            <option value="darker">Darker</option>
+            <option value="brighter">Brighten</option>
+            <option value="dithering">Ordered Dithering</option>
+            <option value="autolvl">Automatic Levels</otion>
+            <option value="saturation">Increased Saturation</option>
+            <option value="interlaced">Interlaced with black lines</option>
+            <!-- Add other options -->
+        </select>
+        <button type="submit">Upload and Convert</button>
+    </form>
+
+</body>
+</html>
