@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from PIL import Image
 import os
 from copy import deepcopy
-from functions import darken, ordered_dithering, auto_lvl, saturation, brighten, interlace
+from functions import *
 
 app = Flask(__name__)
 
@@ -70,6 +70,16 @@ def index():
             elif ("interlaced" == operation):
                 interlaced_image = interlace(image)
                 return save_file(filename, interlaced_image, operation)
+
+            elif ("darken_grey" == operation):
+                greyscale_image = image.convert('L')
+                darker_image = darken(greyscale_image)
+                return save_file(filename, darker_image, operation)
+            
+            elif ("auto_and_saturate" == operation):
+                auto_lvl_image = auto_lvl(image)
+                auto_lvl_saturated_image = saturation(auto_lvl_image)
+                return save_file(filename, auto_lvl_saturated_image, operation)
 
     return render_template('index.html')
 

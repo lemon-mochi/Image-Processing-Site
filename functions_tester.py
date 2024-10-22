@@ -7,5 +7,5 @@ import sys
 
 imagefile = f'static/uploads/{sys.argv[1]}'
 image = Image.open(imagefile)
-new_image = functions.interlace(image)
+new_image = functions.ordered_dithering(image)
 new_image.save(f'testing/{sys.argv[1]}')

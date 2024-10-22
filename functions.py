@@ -3,16 +3,22 @@
 import numpy as np
 from PIL import Image
 import pandas as pd
+import sys
 
 def darken(image):
-    # Convert image to a NumPy array
+    # handle case where image is using a different encoding scheme
+    if image.mode == "P":
+        image = image.convert("RGB")
+
     image_array = np.array(image)
-    
-    if image_array.shape[-1] == 3:
+    if image_array.shape[-1] == 3: # RGB
         image_array = (image_array // 2).astype(np.uint8)
     
-    elif image_array.shape[-1] == 4:
+    elif image_array.shape[-1] == 4: # contains an alpha channel
         image_array[:, :, :3] = (image_array[:, :, :3] // 2).astype(np.uint8)
+
+    else: # probably greyscale
+        image_array = (image_array // 2).astype(np.uint8)
 
     # Convert back to PIL Image
     return Image.fromarray(image_array)
@@ -27,6 +33,7 @@ def ordered_dithering(image):
 
     image = image.convert('L')
     image_array = (np.array(image, dtype=np.uint8) // 15).astype(np.uint8)  # Normalize values
+    print(image_array)
     
     # Get the dimensions of the image
     height, width = image_array.shape
@@ -36,7 +43,7 @@ def ordered_dithering(image):
     
     # Perform the ordered dithering: compare each pixel to the Bayer matrix value
     dithered_image_array = (image_array > tiled_matrix).astype(np.uint8) * 255
-    
+
     # Convert back to a PIL image
     return Image.fromarray(dithered_image_array)
 
