@@ -47,110 +47,101 @@ def ordered_dithering(image):
     # Convert back to a PIL image
     return Image.fromarray(dithered_image_array)
 
+import numpy as np
+from PIL import Image
+
 def auto_lvl(image):
-    # handle case where image is using a different encoding scheme
+    # Handle case where image is using a different encoding scheme
     if image.mode == "P":
         image = image.convert("RGB")
 
+    # Convert the image to a NumPy array
     image_array = np.array(image)
+
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
-    
-    # Reshape the array to have height * width rows and 3 columns (for RGB channels)
-    reshaped = image_array.reshape((height * width, channels))
 
-    # I have to set type to int because the default is an 8 bit int which is too small
-    if (channels == 3):
-        df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue']).astype(int)
-    elif (channels == 4):
-        df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue', 'alpha']).astype(int)
-    elif (channels == 1):
-        df = pd.DataFrame(reshaped, columns=['intensity']).astype(int)
-        max_intensity = df['intensity'].max()
-        min_intensity = df['intensity'].min()
+    # Processing for grayscale (1 channel)
+    if channels == 1:
+        max_intensity = image_array.max()
+        min_intensity = image_array.min()
 
         intensity_factor = 255 / (max_intensity - min_intensity)
 
         # Apply the adjustment and clip the values
-        df['intensity'] = (df['intensity'] - min_intensity) * intensity_factor
-        df['intensity'] = df['intensity'].clip(0, 255)
+        auto_lvl_array = ((image_array - min_intensity) * intensity_factor).clip(0, 255).astype(np.uint8)
 
-        # Convert back to numpy array and reshape
-        new_reshaped = df.to_numpy(dtype=np.uint8)
-        auto_lvl_array = new_reshaped.reshape(height, width, channels)
-        return Image.fromarray(auto_lvl_array)
+    # Processing for RGB (3 channels) or RGBA (4 channels)
+    elif channels in [3, 4]:
+        # Separate channels
+        r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
+
+        # Calculate factors for each channel
+        red_factor = 255 / (r.max() - r.min())
+        green_factor = 255 / (g.max() - g.min())
+        blue_factor = 255 / (b.max() - b.min())
+
+        # Apply auto-level for RGB
+        r = ((r - r.min()) * red_factor).clip(0, 255).astype(np.uint8)
+        g = ((g - g.min()) * green_factor).clip(0, 255).astype(np.uint8)
+        b = ((b - b.min()) * blue_factor).clip(0, 255).astype(np.uint8)
+
+        # Rebuild the image
+        if channels == 3:
+            auto_lvl_array = np.stack([r, g, b], axis=2)
+        else:
+            a = image_array[:, :, 3]  # Alpha channel
+            auto_lvl_array = np.stack([r, g, b, a], axis=2)
+    
     else:
-        print("Given image does not have three, four, or one channels, return original image")
+        print("Given image does not have three, four, or one channels, returning original image")
         return image
 
-    # find the max and min for each colour channel
-    max_r = df['red'].max()
-    max_g = df['green'].max()
-    max_b = df['blue'].max()
-
-    min_r = df['red'].min()
-    min_g = df['green'].min()
-    min_b = df['blue'].min()
-
-    red_factor = 255 / (max_r - min_r)
-    green_factor = 255 / (max_g - min_g)
-    blue_factor = 255 / (max_b - min_b)
-
-    # apply the changes to the pixels
-    df['red'] = (df['red'] - min_r) * red_factor
-    df['green'] = (df['green'] - min_g) * green_factor
-    df['blue'] = (df['blue'] - min_b) * blue_factor
-
-    # ensure that the values are from 0 to 255
-    df['red'] = df['red'].clip(0, 255)
-    df['green'] = df['green'].clip(0, 255)
-    df['blue'] = df['blue'].clip(0, 255)
-
-    # convert back to numpy array
-    new_reshaped = df.to_numpy(dtype=np.uint8)
-    auto_lvl_array = new_reshaped.reshape(height, width, channels)
-
+    # Convert back to an image
     return Image.fromarray(auto_lvl_array)
+
     
 def saturation(image):
-    # handle case where image is using a different encoding scheme
+    # Handle case where image is using a different encoding scheme
     if image.mode == "P":
         image = image.convert("RGB")
 
+    # Convert the image to a NumPy array
     image_array = np.array(image)
+
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
-    # Reshape the array to have height * width rows and 3 columns (for RGB channels)
-    reshaped = image_array.reshape((height * width, channels))
 
-    # I have to set type to int because the default is an 8 bit int which is too small
-    if (channels == 3):
-        df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue']).astype(int)
-    elif (channels == 4):
-        df = pd.DataFrame(reshaped, columns=['red', 'green', 'blue', 'alpha']).astype(int)
-    # no need to check for greyscale image because you cannot saturate a grey image
+    # Only process RGB or RGBA images
+    if channels == 3:
+        r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
+    elif channels == 4:
+        r, g, b, a = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2], image_array[:, :, 3]
     else:
-        print("Given image does not have three or four channels, return original image")
+        print("Given image does not have three or four channels, returning original image")
         return image
 
-    df.loc[:, 'avg'] = (df['red'] + df['green'] + df['blue']) // 3
+    # Calculate the average (luminance approximation) of the RGB values
+    avg = (r + g + b) // 3
 
-    # use a scale of 1.4
-    df['red'] = (df['avg'] + 1.4  * (df['red'] - df['avg']))
-    df['green'] = (df['avg'] + 1.4 * (df['green'] - df['avg']))
-    df['blue'] = (df['avg'] + 1.4 * (df['blue'] - df['avg']))
+    # Use a saturation scale of 1.4
+    saturation_scale = 1.4
+    r = avg + saturation_scale * (r - avg)
+    g = avg + saturation_scale * (g - avg)
+    b = avg + saturation_scale * (b - avg)
 
-    # I do not need this anymore
-    df.drop(['avg'], axis=1, inplace=True)
+    # Clip the values to ensure they are within 0-255
+    r = r.clip(0, 255).astype(np.uint8)
+    g = g.clip(0, 255).astype(np.uint8)
+    b = b.clip(0, 255).astype(np.uint8)
 
-    # ensure that the values are from 0 to 255
-    df['red'] = df['red'].clip(0, 255)
-    df['green'] = df['green'].clip(0, 255)
-    df['blue'] = df['blue'].clip(0, 255)
+    # Rebuild the image with or without alpha channel
+    if channels == 3:
+        saturated_array = np.stack([r, g, b], axis=2)
+    else:
+        saturated_array = np.stack([r, g, b, a], axis=2)
 
-    new_reshaped = df.to_numpy(dtype=np.uint8)
-    saturated_array = new_reshaped.reshape(height, width, channels)
-
+    # Convert back to an image
     return Image.fromarray(saturated_array)
 
 def brighten(image):
