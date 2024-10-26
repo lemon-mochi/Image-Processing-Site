@@ -32,8 +32,7 @@ def index():
         operation = request.form.get('operation')
         if file.filename == '':
             return "No selected file"
-        if operation =='':
-            return "No selected operation"
+        
         if file and allowed_file(file.filename):
             filename = file.filename
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -81,8 +80,8 @@ def index():
                 return save_file(filename, darker_image, operation)
             
             elif ("auto_and_saturate" == operation):
-                auto_lvl_image = auto_lvl(image)
-                auto_lvl_saturated_image = saturation(auto_lvl_image)
+                auto_lvl_image = auto_lvl(image_array)
+                auto_lvl_saturated_image = saturation(np.array(auto_lvl_image))
                 return save_file(filename, auto_lvl_saturated_image, operation)
             
             elif ("og_and_darker" == operation):
@@ -98,6 +97,10 @@ def index():
 
     return render_template('index.html')
 
+@app.route('/interlace_two')
+def interlace_two():
+    return render_template('interlace_two.html')
+
 # New route to display the original and modified images
 @app.route('/display/<original_image>/<modified_image>')
 def display_images(original_image, modified_image):
@@ -106,4 +109,4 @@ def display_images(original_image, modified_image):
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

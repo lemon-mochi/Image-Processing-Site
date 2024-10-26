@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Advanced Interlacing Options</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <h1>Upload an Image and Select Two Modifications</h1>
+    <form action="/" method="POST" enctype="multipart/form-data" id="image-form">
+      <input type="file" name="file" accept="image/*" required>
+      <h3>This image's even lines will be used in final image</h3>
+      <div class="button-container">
+          <button type="button" class="first" onclick="setOperation1('original', this)">Original</button>
+          <button type="button" class="first" onclick="setOperation1('greyscale', this)">Greyscale</button>
+          <button type="button" class="first" onclick="setOperation1('darker', this)">Darker</button>
+          <button type="button" class="first" onclick="setOperation1('brighter', this)">Brighten</button>
+          <button type="button" class="first" onclick="setOperation1('darken_grey', this)">Darker and Greyscale</button>
+          <button type="button" class="first" onclick="setOperation1('dithering', this)">Ordered Dithering</button>
+          <button type="button" class="first" onclick="setOperation1('autolvl', this)">Automatic Levels</button>
+          <button type="button" class="first" onclick="setOperation1('saturation', this)">Increased Saturation</button>
+          <button type="button" class="first" onclick="setOperation1('auto_and_saturate', this)">Auto Levels and Saturate</button>
+          <button type="button" class="first" onclick="setOperation1('interlaced', this)">Interlace with Black Lines</button>
+      </div>
+      <input type="hidden" name="operation" id="operation1">
+      <br>
+      <h3>This image's odd lines will be used in final image</h3>
+      <div class="button-container" id="second">
+        <button type="button" class="second" onclick="setOperation2('original', this)">Original</button>
+        <button type="button" class="second" onclick="setOperation2('greyscale', this)">Greyscale</button>
+        <button type="button" class="second" onclick="setOperation2('darker', this)">Darker</button>
+        <button type="button" class="second" onclick="setOperation2('brighter', this)">Brighten</button>
+        <button type="button" class="second" onclick="setOperation2('darken_grey', this)">Darker and Greyscale</button>
+        <button type="button" class="second" onclick="setOperation2('dithering', this)">Ordered Dithering</button>
+        <button type="button" class="second" onclick="setOperation2('autolvl', this)">Automatic Levels</button>
+        <button type="button" class="second" onclick="setOperation2('saturation', this)">Increased Saturation</button>
+        <button type="button" class="second" onclick="setOperation2('auto_and_saturate', this)">Auto Levels and Saturate</button>
+        <button type="button" class="second" onclick="setOperation2('interlaced', this)">Interlace with Black Lines</button>
+    </div>
+    <br>
+    <input type="hidden" name="operation" id="operation2">
+      <button type="submit">Upload and Convert</button>
+  </form>
+  <script src="{{ url_for('static', filename='js/scripts_interlace.js') }}"></script>
+  </body>
+</html>

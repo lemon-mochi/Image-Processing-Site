@@ -15,7 +15,29 @@
     flex-wrap: wrap;
     gap: 10px;
 }
+
 .button-container button {
     padding: 10px 20px;
     cursor: pointer;
+    background-color: lightgrey; /* Default colour */
+    border: 1px solid #bbb;
+}
+
+.button-container button:hover {
+    background-color: grey; /* Highlight colour */
+    color: black;
+}
+
+button:active {
+    transform: translateY(4px);
+}
+
+.button-container .selected {
+    background-color: darkblue; /* Selected button color */
+    color: white; /* Text color when selected */
+}
+
+.arrow {
+    height: 20px;
+    width: auto;
 }

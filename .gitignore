@@ -3,3 +3,4 @@
 *.jpeg
 *.JPG
 *.tif
+!static/css/*
