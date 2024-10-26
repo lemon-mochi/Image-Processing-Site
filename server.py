@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for
-from PIL import Image
 import os
 from copy import deepcopy
 from functions import *
@@ -42,13 +41,18 @@ def index():
             
             # Process the image (convert to greyscale)
             image = Image.open(filepath)
+            # handle case where image is using a different encoding scheme
+            if image.mode == "P":
+                image = image.convert("RGB")
+                
+            image_array = np.array(image)
 
             if ("greyscale" == operation):
                 greyscale_image = image.convert('L')
                 return save_file(filename, greyscale_image, operation)
             
             elif ("darker" == operation):
-                darker_image = darken(image)
+                darker_image = darken(image_array)
                 return save_file(filename, darker_image, operation)
             
             elif ("dithering" == operation):
@@ -56,30 +60,41 @@ def index():
                 return save_file(filename, dithered_image, operation)
 
             elif ("autolvl" == operation):
-                auto_lvl_image = auto_lvl(image)
+                auto_lvl_image = auto_lvl(image_array)
                 return save_file(filename, auto_lvl_image, operation)
         
             elif ("saturation" == operation):
-                saturated_image = saturation(image)
+                saturated_image = saturation(image_array)
                 return save_file(filename, saturated_image, operation)
         
             elif ("brighter" == operation):
-                brighter_image = brighten(image)
+                brighter_image = brighten(image_array)
                 return save_file(filename, brighter_image, operation)
             
             elif ("interlaced" == operation):
-                interlaced_image = interlace(image)
+                interlaced_image = interlace(image_array)
                 return save_file(filename, interlaced_image, operation)
 
             elif ("darken_grey" == operation):
                 greyscale_image = image.convert('L')
-                darker_image = darken(greyscale_image)
+                darker_image = darken(np.array(greyscale_image))
                 return save_file(filename, darker_image, operation)
             
             elif ("auto_and_saturate" == operation):
                 auto_lvl_image = auto_lvl(image)
                 auto_lvl_saturated_image = saturation(auto_lvl_image)
                 return save_file(filename, auto_lvl_saturated_image, operation)
+            
+            elif ("og_and_darker" == operation):
+                darker_image = darken(image_array)
+                new_image = interlace_two(image_array, np.array(darker_image))
+                return save_file(filename, new_image, operation)
+            
+            elif ("darker_and_auto" == operation):
+                darker_image = darken(image_array)
+                auto_lvl_image = auto_lvl(image_array)
+                new_image = interlace_two(np.array(darker_image), np.array(auto_lvl_image))
+                return save_file(filename, new_image, operation)
 
     return render_template('index.html')
 

@@ -4,13 +4,11 @@ import numpy as np
 from PIL import Image
 import pandas as pd
 import sys
+import ctypes
 
-def darken(image):
-    # handle case where image is using a different encoding scheme
-    if image.mode == "P":
-        image = image.convert("RGB")
+my_functions = ctypes.CDLL('./my_functions.so')
 
-    image_array = np.array(image)
+def darken(image_array):
     if image_array.shape[-1] == 3: # RGB
         image_array = (image_array // 2).astype(np.uint8)
     
@@ -33,7 +31,6 @@ def ordered_dithering(image):
 
     image = image.convert('L')
     image_array = (np.array(image, dtype=np.uint8) // 15).astype(np.uint8)  # Normalize values
-    print(image_array)
     
     # Get the dimensions of the image
     height, width = image_array.shape
@@ -47,17 +44,7 @@ def ordered_dithering(image):
     # Convert back to a PIL image
     return Image.fromarray(dithered_image_array)
 
-import numpy as np
-from PIL import Image
-
-def auto_lvl(image):
-    # Handle case where image is using a different encoding scheme
-    if image.mode == "P":
-        image = image.convert("RGB")
-
-    # Convert the image to a NumPy array
-    image_array = np.array(image)
-
+def auto_lvl(image_array):
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
 
@@ -95,58 +82,28 @@ def auto_lvl(image):
     
     else:
         print("Given image does not have three, four, or one channels, returning original image")
-        return image
+        return Image.fromarray(image_array)
 
     # Convert back to an image
     return Image.fromarray(auto_lvl_array)
 
     
-def saturation(image):
-    # Handle case where image is using a different encoding scheme
-    if image.mode == "P":
-        image = image.convert("RGB")
-
-    # Convert the image to a NumPy array
-    image_array = np.array(image)
-
+def saturation(image_array):
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
+    # Reshape the array to have height * width rows and 3 columns (for RGB channels)
+    reshaped = image_array.reshape((height * width * channels)).astype(np.int32)
+    if (channels == 1):
+        # you cannot sautrate a greyscale image. return original image
+        return Image.fromarray(image_array)
+    
+    my_functions.saturate.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int)
+    my_functions.saturate(reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_int)), reshaped.size, channels)
+    saturated_array = reshaped.reshape(height, width, channels).astype(np.uint8)
 
-    # Only process RGB or RGBA images
-    if channels == 3:
-        r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
-    elif channels == 4:
-        r, g, b, a = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2], image_array[:, :, 3]
-    else:
-        print("Given image does not have three or four channels, returning original image")
-        return image
-
-    # Calculate the average (luminance approximation) of the RGB values
-    avg = (r + g + b) // 3
-
-    # Use a saturation scale of 1.4
-    saturation_scale = 1.4
-    r = avg + saturation_scale * (r - avg)
-    g = avg + saturation_scale * (g - avg)
-    b = avg + saturation_scale * (b - avg)
-
-    # Clip the values to ensure they are within 0-255
-    r = r.clip(0, 255).astype(np.uint8)
-    g = g.clip(0, 255).astype(np.uint8)
-    b = b.clip(0, 255).astype(np.uint8)
-
-    # Rebuild the image with or without alpha channel
-    if channels == 3:
-        saturated_array = np.stack([r, g, b], axis=2)
-    else:
-        saturated_array = np.stack([r, g, b, a], axis=2)
-
-    # Convert back to an image
     return Image.fromarray(saturated_array)
 
-def brighten(image):
-    image_array = np.array(image)  # Convert to float for scaling
-
+def brighten(image_array):
     image_array = image_array * 1.25
     image_array = np.clip(image_array, 0, 255)  # Clip to ensure values are within [0, 255]
     image_array = image_array.astype(np.uint8)  # Convert back to uint8 after clipping
@@ -156,13 +113,7 @@ def brighten(image):
     # Convert back to PIL Image
     return Image.fromarray(image_array)
 
-def interlace(image):
-    # handle case where image is using a different encoding scheme
-    if image.mode == "P":
-        image = image.convert("RGB")
-
-    image_array = np.array(image)
-        
+def interlace(image_array):
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
     
@@ -181,12 +132,36 @@ def interlace(image):
         cols_to_modify = [col for col in df.columns if (col + 1) % 4 != 0]
         df.loc[odd_mask, cols_to_modify] = 0
     else:
-        return image
+        return Image.fromarray(image_array)
 
 
     new_reshaped = df.to_numpy(dtype=np.uint8)
     interlaced_arary = new_reshaped.reshape(height, width, channels)
 
     return Image.fromarray(interlaced_arary)
+
+# for this function, the two arrays must have the same size and shape, otherwise an error will occur
+def interlace_two(image_array1, image_array2):
+    height, width, channels = image_array1.shape
+    reshaped1 = image_array1.reshape(height, width * channels)
+    reshaped2 = image_array2.reshape(height, width * channels)
+
+    df1 = pd.DataFrame(reshaped1)
+    df2 = pd.DataFrame(reshaped2)
+
+    odd_mask = df1.index % 2 != 0
+
+    if (channels == 3 or channels == 1):
+        df1.loc[odd_mask, :] = df2.loc[odd_mask, :]
+    elif channels == 4:
+        cols_to_modify = [col for col in df1.columns if (col + 1) % 4 != 0]
+        df1.loc[odd_mask, cols_to_modify] = df2.loc[odd_mask, :]
+
+    new_reshaped = df1.to_numpy(dtype=np.uint8)
+    interlaced_array = new_reshaped.reshape(height, width, channels)
+
+    return Image.fromarray(interlaced_array)
+
+    
 
 

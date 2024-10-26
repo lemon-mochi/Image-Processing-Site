@@ -7,5 +7,11 @@ import sys
 
 imagefile = f'static/uploads/{sys.argv[1]}'
 image = Image.open(imagefile)
-new_image = functions.saturation(image)
+# handle case where image is using a different encoding scheme
+if image.mode == "P":
+    image = image.convert("RGB")
+image_array = functions.np.array(image)
+new_image2 = functions.ordered_dithering(image)
+new_image2 = new_image2.convert("RGB")
+new_image = functions.interlace_two(image_array, functions.np.array(new_image2))
 new_image.save(f'testing/{sys.argv[1]}')
