@@ -4,3 +4,4 @@
 *.JPG
 *.tif
 !static/css/*
+*.__pycache__

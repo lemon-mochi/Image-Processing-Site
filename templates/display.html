@@ -11,11 +11,16 @@
     <div class="image-container">
         <div>
             <h3>Original Image:</h3>
-            <img src="{{ url_for('static', filename='uploads/' + original_image) }}" alt="Original Image">
+            <a href="{{ url_for('static', filename='uploads/' + original_image) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + original_image) }}" alt="Original Image">
+            </a>
         </div>
         <div>
             <h3>Modified Image:</h3>
-            <img src="{{ url_for('static', filename='uploads/' + modified_image) }}" alt="Modified Image">
+            <a href="{{ url_for('static', filename='uploads/' + modified_image) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + modified_image) }}" alt="Modified Image">
+            </a>
+            
         </div>
     </div>
     <br>
