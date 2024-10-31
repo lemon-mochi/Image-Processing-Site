@@ -108,8 +108,6 @@ def brighten(image_array):
     image_array = np.clip(image_array, 0, 255)  # Clip to ensure values are within [0, 255]
     image_array = image_array.astype(np.uint8)  # Convert back to uint8 after clipping
     
-
-    print(image_array)
     # Convert back to PIL Image
     return Image.fromarray(image_array)
 

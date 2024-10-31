@@ -11,7 +11,5 @@ image = Image.open(imagefile)
 if image.mode == "P":
     image = image.convert("RGB")
 image_array = functions.np.array(image)
-new_image2 = functions.ordered_dithering(image)
-new_image2 = new_image2.convert("RGB")
-new_image = functions.interlace_two(image_array, functions.np.array(new_image2))
+new_image = functions.ordered_dithering(image)
 new_image.save(f'testing/{sys.argv[1]}')
