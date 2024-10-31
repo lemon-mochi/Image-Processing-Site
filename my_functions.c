@@ -3,7 +3,7 @@
 // For the saturate function, when I used numpy, the code was buggy, when I converted to pandas, it would fail with large images.
 // I decided it would be easier to write this in C.
 // I did not know how to deal with 2-d arrays, so I converted the numpy array to a 1-d array.
-void saturate(int* array, int len, int channels) {
+void saturate(short* array, int len, int channels) {
     for (int i = 0; i < len; i += channels) {
         int avg = (array[i] + array[i+1] + array[i+2]) / 3;
         array[i] = avg + 1.4 * (array[i] - avg);
@@ -28,7 +28,9 @@ void saturate(int* array, int len, int channels) {
 // appear as grey. Maybe because of the greyscale thing is done in Python.
 // Even when converting to greyscale in C instead of Python, the output still contains grey values.
 // The problem must be something not caused by the code.
-void ordered_dithering(int cols, unsigned char* inputArray, unsigned char* outputArray, int len, int channels) {
+/*void ordered_dithering(
+    int cols, unsigned char* inputArray, unsigned char* outputArray, int len, int channels
+) {
     // define the 4x4 Bayer matrix
     unsigned char bayer_matrix[4][4] = {
         {0, 8, 2, 10},
@@ -66,5 +68,194 @@ void ordered_dithering(int cols, unsigned char* inputArray, unsigned char* outpu
 
     for (int i = 0; i < o; i++) {
         if (outputArray[i] != 0 && outputArray[i] != 255) printf("%i\n", outputArray[i]);
+    }
+}*/
+
+// This blur function takes the average values of neighbouring pixels and sets that as the new value
+// This function expects the input and output arrays to be the same size and shape 
+// (1-dimensional 8-bit unsigned integers)
+void blur(
+    int rows, int cols, unsigned char* inputArray, unsigned char* outputArray, int len, int channels
+) {
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    int width = cols * channels;
+
+    for (int i = 0; i < len; i++) {
+        // There are nine cases, the four corners, pixels on the four edges, and then pixels in the middle of the image
+        // to find the row, divide by the index (k) by the number of rows
+        x = (i / channels) / cols;
+        // to find the column, find the remainder when dividing the index (k) by 
+        // the number of columns
+        y = (i / channels) % cols;
+
+        // dealing with top left pixel
+        if (x == 0 && y == 0) {
+            // need to consider pixel to right, pixel below, pixel on bottom right
+            int bottomRightPixel = width + channels;
+            outputArray[0] = (inputArray[channels] + inputArray[width] + inputArray[bottomRightPixel]) / 3;
+            outputArray[1] = (inputArray[1 + channels] + inputArray[1 + width] + inputArray[1 + bottomRightPixel]) / 3;
+            outputArray[2] = (inputArray[2 + channels] + inputArray[2 + width] + inputArray[2 + bottomRightPixel]) / 3;
+        }
+
+        // dealing with top right pixel
+        else if (x == 0 && y == cols - 1) {
+            // need to consider pixel to left, pixel below, and pixel on bottom left
+            int leftPixel = i - channels;
+            int bottomPixel = i + width;
+            int bottomLeftPixel = bottomPixel - channels;
+            outputArray[i] = (inputArray[leftPixel] + inputArray[bottomPixel] + inputArray[bottomLeftPixel]) / 3;
+            outputArray[i + 1] = (inputArray[1 + leftPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomLeftPixel]) / 3;
+            outputArray[i + 2] = (inputArray[2 + leftPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomLeftPixel]) / 3;
+        }
+
+        // dealing with bottom left pixel
+        else if (x == rows - 1 && y == 0) {
+            // need to consider pixel on right, pixel on top, pixel on top right
+            int rightPixel = i + channels;
+            int topPixel = i - width;
+            int topRightPixel = topPixel + channels;
+            outputArray[i] = (inputArray[rightPixel] + inputArray[topPixel] + inputArray[topRightPixel]) / 3;
+            outputArray[i + 1] = (inputArray[1 + rightPixel] + inputArray[1 + topPixel] + inputArray[1 + topRightPixel]) / 3;
+            outputArray[i + 2] = (inputArray[2 + rightPixel] + inputArray[2 + topPixel] + inputArray[2 + topRightPixel]) / 3;
+        }
+
+        // dealing with bottom right pixel
+        else if (x == rows - 1 && y == cols - 1) {
+            // need to consider pixel on left, pixel on top, pixel on top left
+            int leftPixel = len - channels;
+            int topPixel = len - width;
+            int topLeftPixel = topPixel - channels;
+            outputArray[i] = (inputArray[leftPixel] + inputArray[topPixel] + inputArray[topLeftPixel]) / 3;
+            outputArray[i + 1] = (inputArray[1 + leftPixel] + inputArray[1 + topPixel] + inputArray[1 + topLeftPixel]) / 3;
+            outputArray[i + 2] = (inputArray[2 + leftPixel] + inputArray[2 + topPixel] + inputArray[2 + topLeftPixel]) / 3;
+        }
+
+        // dealing with pixels on top row
+        else if (x == 0) {
+            // need to consider pixel to left, right, bottom left, bottom, and bottom right
+            int leftPixel = i - channels;
+            int rightPixel = i + channels;
+            int bottomPixel = i + width;
+            int bottomLeftPixel = leftPixel + width;
+            int bottomRigthPixel = rightPixel + width;
+            
+            outputArray[i] = (
+                inputArray[leftPixel] + inputArray[rightPixel] + inputArray[bottomPixel] + inputArray[bottomLeftPixel] + inputArray[bottomRigthPixel]
+            ) / 5;
+
+            outputArray[i + 1] = (
+                inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomRigthPixel]
+            ) / 5;
+
+            outputArray[i + 2] = (
+                inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomRigthPixel]
+            ) / 5;
+        }
+
+        // dealing with pixels on bottom row
+        else if (x == rows - 1) {
+            // need to consider pixel on left, right, top, top left, top right
+            int leftPixel = i - channels;
+            int rightPixel = i + channels;
+            int topPixel = i - width;
+            int topLeftPixel = leftPixel - width;
+            int topRightPixel = rightPixel - width;
+
+            outputArray[i] = (
+                inputArray[leftPixel] + inputArray[rightPixel] + inputArray[topPixel] + inputArray[topLeftPixel] + inputArray[topRightPixel]
+            ) / 5;
+
+            outputArray[i + 1] = (
+                inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + inputArray[1 + topPixel] + inputArray[1 + topLeftPixel] + inputArray[1 + topRightPixel]
+            ) / 5;
+
+            outputArray[i + 2] = (
+                inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + inputArray[2 + topPixel] + inputArray[2 + topLeftPixel] + inputArray[2 + topRightPixel]
+            ) / 5;         
+        }
+
+        // dealing with pixels on left column
+        else if (y == 0) {
+            // need to consider pixel on top, botom, right, top right, bottom right
+            int topPixel = i - width;
+            int bottomPixel = i + width;
+            int rightPixel = i + channels;
+            int topRightPixel = rightPixel - width;
+            int bottomRightPIxel = bottomPixel + channels;
+
+            outputArray[i] = (
+                inputArray[topPixel] + inputArray[topRightPixel] + inputArray[rightPixel] + inputArray[bottomPixel] + inputArray[bottomRightPIxel] 
+            ) / 5;
+
+            outputArray[i + 1] = (
+                inputArray[1 + topPixel] + inputArray[1 + topRightPixel] + inputArray[1 + rightPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomRightPIxel] 
+            ) / 5;
+
+            outputArray[i + 2] = (
+                inputArray[2 + topPixel] + inputArray[2 + topRightPixel] + inputArray[2 + rightPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomRightPIxel] 
+            ) / 5;
+        }
+
+        // dealing with pixels on right column
+        else if (y == cols - 1) {
+            // need to consider pixel on top, bottom, left, top left, bottom left
+            int topPixel = i - width;
+            int topLeftPixel = topPixel - channels;
+            int leftPixel = i - channels;
+            int bottomPixel = i + width;
+            int bottomLeftPixel = bottomPixel - channels;
+
+            outputArray[i] = (
+                inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[leftPixel] + inputArray[bottomLeftPixel] + inputArray[bottomPixel]
+            ) / 5;
+
+            outputArray[i + 1] = (
+                inputArray[1 + topLeftPixel] + inputArray[1 + topPixel] + inputArray[1 + leftPixel] + inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomPixel]
+            ) / 5;
+
+            outputArray[i + 2] = (
+                inputArray[2 + topLeftPixel] + inputArray[2 + topPixel] + inputArray[2 + leftPixel] + inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomPixel]
+            ) / 5;                                    
+        }
+
+        // pixels that are not in the corner or any edges
+        else {
+            // need to consider all eight adjacent pixels
+            int leftPixel = i - channels;
+            int rightPixel = i + channels;
+            int topPixel = i - width;
+            int bottomPixel = i + width;
+            int topLeftPixel = topPixel - channels;
+            int topRightPixel = topPixel + channels;
+            int bottomLeftPixel = bottomPixel - channels;
+            int bottomRightPixel = bottomPixel + channels;
+
+            outputArray[i] = (
+                inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[topRightPixel] +
+                inputArray[leftPixel] + inputArray[rightPixel] + 
+                inputArray[bottomLeftPixel] + inputArray[bottomPixel] + inputArray[bottomRightPixel]
+            ) / 8;
+
+            outputArray[i + 1] = (
+                inputArray[1 + topLeftPixel] + inputArray[1 + topPixel] + inputArray[1 + topRightPixel] +
+                inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + 
+                inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomRightPixel]
+            ) / 8;
+
+            outputArray[i + 2] = (
+                inputArray[2 + topLeftPixel] + inputArray[2 + topPixel] + inputArray[2 + topRightPixel] +
+                inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + 
+                inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomRightPixel]
+            ) / 8;
+        }
+        
+        // for alpha channels, keep it as is
+        if (channels == 4) {
+            outputArray[i + 3] = inputArray[i + 3];
+        }
     }
 }

@@ -92,15 +92,14 @@ def saturation(image_array):
     # Get the shape of the image array (height, width, channels)
     height, width, channels = image_array.shape
     # Reshape the array to have height * width rows and 3 columns (for RGB channels)
-    reshaped = image_array.reshape((height * width * channels)).astype(np.int32)
+    reshaped = image_array.reshape((height * width * channels)).astype(np.int16)
     if (channels == 1):
         # you cannot sautrate a greyscale image. return original image
         return Image.fromarray(image_array)
     
-    my_functions.saturate.argtypes = (ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int)
-    my_functions.saturate(reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_int)), reshaped.size, channels)
+    my_functions.saturate.argtypes = (ctypes.POINTER(ctypes.c_short), ctypes.c_int, ctypes.c_int)
+    my_functions.saturate(reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_short)), reshaped.size, channels)
     saturated_array = reshaped.reshape(height, width, channels).astype(np.uint8)
-
     return Image.fromarray(saturated_array)
 
 def brighten(image_array):
@@ -159,6 +158,24 @@ def interlace_two(image_array1, image_array2):
     interlaced_array = new_reshaped.reshape(height, width, channels)
 
     return Image.fromarray(interlaced_array)
+
+def blur(image_array):
+    height, width, channels = image_array.shape
+    print(channels)
+    size = height * width * channels
+    reshaped = image_array.reshape(size)
+    outputC = np.zeros(size).astype(np.uint8)
+
+    my_functions.blur.argtypes = (
+        ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int, ctypes.c_int
+    )
+
+    my_functions.blur(
+        height, width, reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), size, channels
+    )
+
+    blurred_array = outputC.reshape(height, width, channels).astype(np.uint8)
+    return Image.fromarray(blurred_array)
 
     
 
