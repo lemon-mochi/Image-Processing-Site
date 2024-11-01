@@ -84,7 +84,7 @@ void blur(
 
     int width = cols * channels;
 
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < len; i += channels) {
         // There are nine cases, the four corners, pixels on the four edges, and then pixels in the middle of the image
         // to find the row, divide by the index (k) by the number of rows
         x = (i / channels) / cols;
@@ -256,6 +256,117 @@ void blur(
         // for alpha channels, keep it as is
         if (channels == 4) {
             outputArray[i + 3] = inputArray[i + 3];
+        }
+    }
+}
+
+// This function is used to blur images which are in the greyscale format.
+// Very similar to previous function.
+void blurGrey(int rows, int cols, unsigned char* inputArray, unsigned char* outputArray, int len) {
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    for (int i = 0; i < len; i++) {
+        // find the x and y values
+        x = i / cols;
+        y = i % cols;
+
+        // top left corner
+        if (x == 0 && y == 0) {
+            int bottomRightPixel = cols + 1;
+            outputArray[0] = (inputArray[1] + inputArray[cols] + inputArray[bottomRightPixel]) / 3;
+        }
+
+        // top right corner
+        else if (x == 0 && y == cols - 1) {
+            int bottomPixel = i + cols;
+            int bottomRightPixel = bottomPixel - 1;
+            outputArray[i] = (inputArray[i - 1] + inputArray[bottomPixel] + inputArray[bottomRightPixel]) / 3;
+        }
+
+        // bottom left corner
+        else if (x == rows -1 && y == 0) {
+            int topPixel = i - cols;
+            int topRightPixel = topPixel + 1;
+            outputArray[i] = (inputArray[i + 1] + inputArray[topPixel] + inputArray[topRightPixel]) / 3;
+        }
+
+        // bottom right corner
+        else if (x == rows - 1 && y == cols - 1) {
+            int topPixel = i - cols;
+            int topLeftPixel = topPixel - 1;
+            outputArray[i] = (inputArray[i - 1] + inputArray[topPixel] + inputArray[topLeftPixel]) / 3;
+        }
+
+        // on top row
+        else if (x == 0) {
+            int leftPixel = i - 1;
+            int rightPixel = i + 1;
+            int bottomPixel = i + cols;
+            int bottomLeftPixel = bottomPixel - 1;
+            int bottomRightPixel = bottomPixel + 1;
+
+            outputArray[i] = (
+                inputArray[leftPixel] + inputArray[rightPixel] + inputArray[bottomLeftPixel] + inputArray[bottomPixel] + inputArray[bottomRightPixel]
+            ) / 5;
+        }
+
+        // on bottom row
+        else if (x == rows - 1) {
+            int leftPixel = i - 1;
+            int rightPixel = i + 1;
+            int topPixel = i - cols;
+            int topLeftPixel = topPixel - 1;
+            int topRightPixel = topPixel + 1;
+
+            outputArray[i] = (
+                inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[topRightPixel] + inputArray[leftPixel] + inputArray[rightPixel]
+            ) / 5;
+        }
+
+        // on left column
+        else if (y == 0) {
+            int rightPixel = i + 1;
+            int topPixel = i - cols;
+            int bottomPixel = i + cols;
+            int topRightPixel = topPixel + 1;
+            int bottomRightPixel = bottomPixel + 1;
+
+            outputArray[i] = (
+                inputArray[topPixel] + inputArray[topRightPixel] + inputArray[rightPixel] + inputArray[bottomPixel] + inputArray[bottomRightPixel]
+            ) / 5;
+        }
+
+        // on right column
+        else if (y == cols - 1) {
+            int leftPixel = i - 1;
+            int topPixel = i - cols;
+            int topLeftPixel = topPixel - 1;
+            int bottomPixel = i + cols;
+            int bottomLeftPixel = bottomPixel - 1;
+
+            outputArray[i] = (
+                inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[leftPixel] + inputArray[bottomLeftPixel] + inputArray[bottomPixel]
+            ) / 5;
+        }
+
+        else {
+            int leftPixel = i - 1;
+            int rightPixel = i + 1;
+            int topPixel = i - cols;
+            int bottomPixel = i + cols;
+            int topLeftPixel = topPixel - 1;
+            int topRightPixel = topPixel + 1;
+            int bottomLeftPixel = bottomPixel - 1;
+            int bottomRightPixel = bottomPixel + 1;
+
+            outputArray[i] = (
+                inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[topRightPixel] + 
+                inputArray[leftPixel] + inputArray[rightPixel] + 
+                inputArray[bottomLeftPixel] + inputArray[bottomPixel] + inputArray[bottomRightPixel]
+            ) / 8;
         }
     }
 }

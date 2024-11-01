@@ -94,6 +94,10 @@ def index():
                 auto_lvl_image = auto_lvl(image_array)
                 new_image = interlace_two(np.array(darker_image), np.array(auto_lvl_image))
                 return save_file(filename, new_image, operation)
+            
+            elif ("blurred" == operation):
+                blurred_image = blur(image_array)
+                return save_file(filename, blurred_image, operation)
 
     return render_template('index.html')
 
