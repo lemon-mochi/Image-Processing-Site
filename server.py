@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
-from copy import deepcopy
-from functions import *
+from operation_handler import index_operation, interlace_operation, Image
 
 app = Flask(__name__)
 
@@ -15,10 +14,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_file(filename, new_image, operation):
+def save_file(filename, new_array, operation):
     new_filename = f"{operation}_{filename}"
     new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-    Image.fromarray(new_image).save(new_filepath)
+    Image.fromarray(new_array).save(new_filepath)
     # Redirect to the display route with the filenames as parameters
     return redirect(url_for('display_images', original_image=filename, modified_image=new_filename))
 
@@ -46,119 +45,17 @@ def index():
             if image.mode == "P":
                 image = image.convert("RGB")
                 
-            image_array = np.array(image)
-
-            if ("greyscale" == operation):
-                greyscale_image = image.convert('L')
-                return save_file(filename, greyscale_image, operation)
-            
-            elif ("darker" == operation):
-                darker_image = darken(image_array)
-                return save_file(filename, darker_image, operation)
-            
-            elif ("dithering" == operation):
-                dithered_image = ordered_dithering(image)
-                return save_file(filename, dithered_image, operation)
-
-            elif ("autolvl" == operation):
-                auto_lvl_image = auto_lvl(image_array)
-                return save_file(filename, auto_lvl_image, operation)
-        
-            elif ("saturation" == operation):
-                saturated_image = saturation(image_array)
-                return save_file(filename, saturated_image, operation)
-        
-            elif ("brighter" == operation):
-                brighter_image = brighten(image_array)
-                return save_file(filename, brighter_image, operation)
-            
-            elif ("interlaced" == operation):
-                interlaced_image = interlace(image_array)
-                return save_file(filename, interlaced_image, operation)
-
-            elif ("darken_grey" == operation):
-                greyscale_image = image.convert('L')
-                darker_image = darken(greyscale_image)
-                return save_file(filename, darker_image, operation)
-            
-            elif ("auto_and_saturate" == operation):
-                auto_lvl_image = auto_lvl(image_array)
-                auto_lvl_saturated_image = saturation(auto_lvl_image)
-                return save_file(filename, auto_lvl_saturated_image, operation)
-        
-            elif ("blurred" == operation):
-                blurred_image = blur(image_array)
-                return save_file(filename, blurred_image, operation)
+            # User wanted to modify the image from index.html
+            if (operation != None):
+                new_array = index_operation(image, operation)
+                
+                return save_file(filename, new_array, operation)
             
             # handling the case where the user wanted to interlace two modifications
             if (operation1 != None):
-                operations = [operation0, operation1]
-                image_arrays = []
-                
-                for i in range(2):
-                    if ("original" == operations[i]):
-                        image_arrays.append(image_array)
+                new_array = interlace_operation(image, operation0, operation1)
 
-                    elif ("greyscale" == operations[i]):
-                        if image.mode == 'L': # input image is already in greyscale
-                            image_arrays.append(image_array)
-                        else:
-                            greyscale_array = special_greyscale(image_array)
-                            # The interlace_two function expects both inputs to be the 
-                            # same shape and size
-                            image_arrays.append(greyscale_array)
-
-                    elif ("darker" == operations[i]):
-                        darker_image = darken(image_array)
-                        image_arrays.append(darker_image)
-
-                    elif ("dithering" == operations[i]):
-                        dithered_array = ordered_dithering(image)
-                        # here, dithered_image is a 2-d array. If the original
-                        # is different, we must set the dithered_image to whatever the heck
-                        # the original image's mode is. This is because interlace two requires
-                        # the two images to be the same shape.
-                        if (image.mode != 'L'):
-                            dithered_image = Image.fromarray(dithered_array).convert(image.mode)
-                            dithered_array = np.array(dithered_image)
-
-                        image_arrays.append(dithered_array)
-
-                    elif ("autolvl" == operations[i]):
-                        auto_lvl_image = auto_lvl(image_array)
-                        image_arrays.append(auto_lvl_image)
-
-                    elif ("saturation" == operations[i]):
-                        saturated_image = saturation(image_array)
-                        image_arrays.append(saturated_image)
-
-                    elif ("brighter" == operations[i]):
-                        brighter_image = brighten(image_array)
-                        image_arrays.append(brighter_image)
-
-                    elif ("interlaced" == operations[i]):
-                        interlaced_image = interlace(image_array)
-                        image_arrays.append(interlaced_image)
-
-                    elif ("darken_grey" == operations[i]):
-                        if image.mode == 'L': # already greyscale
-                            image_arrays.append(image_array)
-                        else:
-                            greyscale_image = special_greyscale(image_array)
-                            darker_image = darken(greyscale_image)
-                            image_arrays.append(darker_image)
-
-                    elif ("auto_and_saturate" == operations[i]):
-                        auto_lvl_image = auto_lvl(image_array)
-                        auto_lvl_saturated_image = saturation(auto_lvl_image)
-                        image_arrays.append(auto_lvl_saturated_image)                        
-
-                    elif ("blurred" == operations[i]):
-                        blurred_image = blur(image_array)
-                        image_arrays.append(blurred_image)
-
-                new_image = interlace_two(image_arrays[0], image_arrays[1])
-                return save_file(filename, new_image, "interlaced")
+                return save_file(filename, new_array, "interlaced")
 
     return render_template('index.html')
 
