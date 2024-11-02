@@ -7,3 +7,4 @@
 !static/css/*
 *.webp
 *.jfif
+*static/uploads/*
