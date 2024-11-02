@@ -5,3 +5,5 @@
 *.JPG
 *.tif
 !static/css/*
+*.webp
+*.jfif
