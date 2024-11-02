@@ -96,7 +96,11 @@ def saturation(image_array):
     reshaped = image_array.reshape((height * width * channels)).astype(np.int16)
     
     my_functions.saturate.argtypes = (ctypes.POINTER(ctypes.c_short), ctypes.c_int, ctypes.c_int)
-    my_functions.saturate(reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_short)), reshaped.size, channels)
+    my_functions.saturate(
+        reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_short)),
+        reshaped.size, 
+        channels
+    )
     saturated_array = reshaped.reshape(height, width, channels).astype(np.uint8)
     return Image.fromarray(saturated_array)
 
@@ -150,7 +154,8 @@ def interlace(image_array):
 
     return Image.fromarray(interlaced_arary)
 
-# for this function, the two arrays must have the same size and shape, otherwise an error will occur
+# for this function, the two arrays must have the same size and shape, 
+# otherwise an error will occur
 def interlace_two(image_array1, image_array2):
     if len(image_array1.shape) == 2:
         height, width = image_array1.shape
@@ -180,14 +185,27 @@ def interlace_two(image_array1, image_array2):
 def blur(image_array):
     if len(image_array.shape) == 2: # greyscale image
         height, width = image_array.shape
+        size = height * width
+        reshaped = image_array.reshape(size)
+        outputC = np.zeros(size).astype(np.uint8)
 
         my_functions.blurGrey.argtypes = (
-            ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int
+            ctypes.c_int, 
+            ctypes.c_int, 
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.c_int
         )
 
         my_functions.blurGrey(
-            height, width, reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), size
+            height, 
+            width,
+            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
+            size
         )
+
+        blurred_array = outputC.reshape(height, width)
         
     else: # coloured image
         height, width, channels = image_array.shape
@@ -197,16 +215,38 @@ def blur(image_array):
         outputC = np.zeros(size).astype(np.uint8)
 
         my_functions.blur.argtypes = (
-            ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int, ctypes.c_int
+            ctypes.c_int,
+            ctypes.c_int, 
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.c_int, 
+            ctypes.c_int
         )
 
         my_functions.blur(
-            height, width, reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), size, channels
+            height, 
+            width, 
+            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
+            size, 
+            channels
         )
 
-    blurred_array = outputC.reshape(height, width, channels)
+        blurred_array = outputC.reshape(height, width, channels)
+
     return Image.fromarray(blurred_array)
 
+# Since the interlace_two function expects the two images to have the same size and shape, the
+# regular greyscale method will not do as it creates a 1-dimensional array. The best way is 
+# probably to create a new image which maintains the original format but all of the rgb values
+# are the same so that it creates a greyscale image
+def special_greyscale(image_array):
+    r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
+    greyscale = 0.299 * r + 0.587 * g + 0.114 * b
+
+    # Expand greyscale to three channels
+    greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
+    return greyscale
+
+def crtFilter(image_array):
     
-
-

@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Set up the upload folder and allowed extensions
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'tif', 'tiff'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'JPG', 'JPEG'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -30,6 +30,8 @@ def index():
             return "No file part"
         file = request.files['file']
         operation = request.form.get('operation')
+        operation0 = request.form.get('operation0')
+        operation1 = request.form.get('operation1')
         if file.filename == '':
             return "No selected file"
         
@@ -83,26 +85,70 @@ def index():
                 auto_lvl_image = auto_lvl(image_array)
                 auto_lvl_saturated_image = saturation(np.array(auto_lvl_image))
                 return save_file(filename, auto_lvl_saturated_image, operation)
-            
-            elif ("og_and_darker" == operation):
-                darker_image = darken(image_array)
-                new_image = interlace_two(image_array, np.array(darker_image))
-                return save_file(filename, new_image, operation)
-            
-            elif ("darker_and_auto" == operation):
-                darker_image = darken(image_array)
-                auto_lvl_image = auto_lvl(image_array)
-                new_image = interlace_two(np.array(darker_image), np.array(auto_lvl_image))
-                return save_file(filename, new_image, operation)
-            
+        
             elif ("blurred" == operation):
                 blurred_image = blur(image_array)
                 return save_file(filename, blurred_image, operation)
+            
+            # handling the case where the user wanted to interlace two modifications
+            if (operation1 != None):
+                operations = [operation0, operation1]
+                image_arrays = []
+                
+                for i in range(2):
+                    if ("original" == operations[i]):
+                        image_arrays.append(image_array)
+
+                    elif ("greyscale" == operations[i]):
+                        greyscale_array = special_greyscale(image_array)
+                        # The interlace_two function expects rgb or rgba input
+                        image_arrays.append(np.array(greyscale_array))
+
+                    elif ("darker" == operations[i]):
+                        darker_image = darken(image_array)
+                        image_arrays.append(np.array(darker_image))
+
+                    elif ("dithering" == operations[i]):
+                        dithered_image = ordered_dithering(image)
+                        image_arrays.append(np.array(dithered_image))
+
+                    elif ("autolvl" == operations[i]):
+                        auto_lvl_image = auto_lvl(image_array)
+                        image_arrays.append(np.array(auto_lvl_image))
+
+                    elif ("saturation" == operations[i]):
+                        saturated_image = saturated_image(image_array)
+                        image_arrays.append(np.array(saturated_image))
+
+                    elif ("brighter" == operations[i]):
+                        brighter_image = brighten(image_array)
+                        image_arrays.append(np.array(brighter_image))
+
+                    elif ("interlaced" == operations[i]):
+                        interlaced_image = interlace(image_array)
+                        image_arrays.append(np.array(interlaced_image))
+
+                    elif ("darken_grey" == operations[i]):
+                        greyscale_image = image.convert('L')
+                        darker_image = darken(np.array(greyscale_image))
+                        image_arrays.append(np.array(darker_image))
+
+                    elif ("auto_and_saturate" == operations[i]):
+                        auto_lvl_image = auto_lvl(image_array)
+                        auto_lvl_saturated_image = saturation(np.array(auto_lvl_image))
+                        image_arrays.append(np.array(auto_lvl_saturated_image))                        
+
+                    elif ("blurred" == operations[i]):
+                        blurred_image = blur(image_array)
+                        image_arrays.append(np.array(blurred_image))
+
+                new_image = interlace_two(image_arrays[0], image_arrays[1])
+                return save_file(filename, new_image, "interlaced")
 
     return render_template('index.html')
 
 @app.route('/interlace_two')
-def interlace_two():
+def interlace_two_html():
     return render_template('interlace_two.html')
 
 # New route to display the original and modified images

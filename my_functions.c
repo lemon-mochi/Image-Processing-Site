@@ -3,6 +3,7 @@
 // For the saturate function, when I used numpy, the code was buggy, when I converted to pandas, it would fail with large images.
 // I decided it would be easier to write this in C.
 // I did not know how to deal with 2-d arrays, so I converted the numpy array to a 1-d array.
+// I used short instead of unsigned char because the values are likely to go beyond the [0, 255] range
 void saturate(short* array, int len, int channels) {
     for (int i = 0; i < len; i += channels) {
         int avg = (array[i] + array[i+1] + array[i+2]) / 3;
