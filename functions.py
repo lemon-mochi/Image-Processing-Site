@@ -253,9 +253,20 @@ def blur(image_array):
 # probably to create a new image which maintains the original format but all of the rgb values
 # are the same so that it creates a greyscale image. This function assumes a 
 def special_greyscale(image_array):
-    r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
-    greyscale = 0.299 * r + 0.587 * g + 0.114 * b
+    # Check if the image has an alpha channel (4 channels)
+    if image_array.shape[2] == 4:
+        # Separate RGB and Alpha channels
+        r, g, b, alpha = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2], image_array[:, :, 3]
+        greyscale = 0.299 * r + 0.587 * g + 0.114 * b
 
-    # Expand greyscale to three channels
-    greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
+        # Expand greyscale to three channels and add the original alpha channel
+        greyscale = np.stack((greyscale, greyscale, greyscale, alpha), axis=-1)
+    else:
+        # Process as a standard RGB image if only three channels
+        r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
+        greyscale = 0.299 * r + 0.587 * g + 0.114 * b
+
+        # Expand greyscale to three channels
+        greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
+    
     return greyscale

@@ -133,7 +133,7 @@ def index():
                         image_arrays.append(interlaced_image)
 
                     elif ("darken_grey" == operations[i]):
-                        greyscale_image = image.convert('L')
+                        greyscale_image = special_greyscale(image_array)
                         darker_image = darken(greyscale_image)
                         image_arrays.append(darker_image)
 

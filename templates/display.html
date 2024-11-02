@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>Original and Modified Images</h1>
+    <header>
+        <h1>Original and Modified Images</h1>
+    </header>
+
     <div class="image-container">
         <div>
             <h3>Original Image:</h3>
@@ -25,5 +28,14 @@
     </div>
     <br>
     <a href="/">Upload Another Image</a>
+    <br>
+    <a href="{{ url_for('interlace_two_html') }}">Advanced Interlacing</a>
+
+    <footer>
+        <p>
+            &copy; 2024 
+            <a href="https://lemon-mochi.github.io/Personal-Site/" target="_blank">Gen Blaine.</a> All rights reserved.
+        </p>
+    </footer>
 </body>
 </html>

@@ -1,26 +1,36 @@
 .image-container {
     display: flex;
+    justify-content: center;
     gap: 20px;
     margin-top: 20px;
+    max-width: 90%; /* Limiting the max width to create room on the left and right */
+    text-align: center;
+    padding-left: 5%; /* Centering effect with some space on left */
+    padding-right: 5%; /* Centering effect with some space on right */
+    margin: 0 auto; /* Center the entire container horizontally */
 }
 
 .image-container img {
-    max-width: 300px;
+    max-width: 100%; /* Ensure images fit within their containers */
     height: auto;
-    border: 1px solid #ccc;
+    padding: 0 10px; /* Adds subtle left and right padding for each image */
+    box-sizing: border-box; /* Ensures padding doesn't affect image sizing */
 }
 
 .button-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    justify-content: space-around;
+    text-align: center;
 }
 
 .button-container button {
     padding: 10px 20px;
     cursor: pointer;
     background-color: lightgrey; /* Default colour */
-    border: 1px solid #bbb;
+    border: 1px dotted #bbb;
+    font-size: large;
 }
 
 .button-container button:hover {
@@ -40,4 +50,46 @@ button:active {
 .arrow {
     height: 20px;
     width: auto;
+}
+
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: deepskyblue;
+    color: white;
+    padding: 20px 0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+}
+
+.container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+footer {
+    background-color: skyblue;
+    color: white;
+    text-align: center;
+    padding: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    margin-top: auto;
+}
+
+.userButtons {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: lightblue;
+    border: 2px solid grey;
+    font-size: larger;    
 }
