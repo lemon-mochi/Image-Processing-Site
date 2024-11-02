@@ -114,6 +114,13 @@ def index():
 
                     elif ("dithering" == operations[i]):
                         dithered_image = ordered_dithering(image)
+                        # here, dithered_image is a 2-d array. If the original
+                        # is different, we must set the dithered_image to whatever the heck
+                        # the original image's mode is. This is because interlace two requires
+                        # the two images to be the same shape.
+                        if (image.mode != 'L'):
+                            dithered_image = dithered_image.convert(image.mode)
+
                         image_arrays.append(dithered_image)
 
                     elif ("autolvl" == operations[i]):
@@ -133,9 +140,12 @@ def index():
                         image_arrays.append(interlaced_image)
 
                     elif ("darken_grey" == operations[i]):
-                        greyscale_image = special_greyscale(image_array)
-                        darker_image = darken(greyscale_image)
-                        image_arrays.append(darker_image)
+                        if image.mode == 'L': # already greyscale
+                            image_arrays.append(image_array)
+                        else:
+                            greyscale_image = special_greyscale(image_array)
+                            darker_image = darken(greyscale_image)
+                            image_arrays.append(darker_image)
 
                     elif ("auto_and_saturate" == operations[i]):
                         auto_lvl_image = auto_lvl(image_array)

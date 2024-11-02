@@ -249,9 +249,10 @@ def blur(image_array):
     return blurred_array
 
 # Since the interlace_two function expects the two images to have the same size and shape, the
-# regular greyscale method will not do as it creates a 1-dimensional array. The best way is 
+# regular greyscale method will not do as it creates a 2-dimensional array. The best way is 
 # probably to create a new image which maintains the original format but all of the rgb values
-# are the same so that it creates a greyscale image. This function assumes a 
+# are the same so that it creates a greyscale image. This function assumes the image is not 
+# already in greyscale.
 def special_greyscale(image_array):
     # Check if the image has an alpha channel (4 channels)
     if image_array.shape[2] == 4:
