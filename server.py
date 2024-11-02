@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Set up the upload folder and allowed extensions
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'JPG', 'JPEG'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'JPG', 'JPEG', 'PNG', 'jfif'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -113,15 +113,16 @@ def index():
                         image_arrays.append(darker_image)
 
                     elif ("dithering" == operations[i]):
-                        dithered_image = ordered_dithering(image)
+                        dithered_array = ordered_dithering(image)
                         # here, dithered_image is a 2-d array. If the original
                         # is different, we must set the dithered_image to whatever the heck
                         # the original image's mode is. This is because interlace two requires
                         # the two images to be the same shape.
                         if (image.mode != 'L'):
-                            dithered_image = dithered_image.convert(image.mode)
+                            dithered_image = Image.fromarray(dithered_array).convert(image.mode)
+                            dithered_array = np.array(dithered_image)
 
-                        image_arrays.append(dithered_image)
+                        image_arrays.append(dithered_array)
 
                     elif ("autolvl" == operations[i]):
                         auto_lvl_image = auto_lvl(image_array)
