@@ -18,7 +18,7 @@ def allowed_file(filename):
 def save_file(filename, new_image, operation):
     new_filename = f"{operation}_{filename}"
     new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-    new_image.save(new_filepath)
+    Image.fromarray(new_image).save(new_filepath)
     # Redirect to the display route with the filenames as parameters
     return redirect(url_for('display_images', original_image=filename, modified_image=new_filename))
 
@@ -78,12 +78,12 @@ def index():
 
             elif ("darken_grey" == operation):
                 greyscale_image = image.convert('L')
-                darker_image = darken(np.array(greyscale_image))
+                darker_image = darken(greyscale_image)
                 return save_file(filename, darker_image, operation)
             
             elif ("auto_and_saturate" == operation):
                 auto_lvl_image = auto_lvl(image_array)
-                auto_lvl_saturated_image = saturation(np.array(auto_lvl_image))
+                auto_lvl_saturated_image = saturation(auto_lvl_image)
                 return save_file(filename, auto_lvl_saturated_image, operation)
         
             elif ("blurred" == operation):
@@ -100,47 +100,51 @@ def index():
                         image_arrays.append(image_array)
 
                     elif ("greyscale" == operations[i]):
-                        greyscale_array = special_greyscale(image_array)
-                        # The interlace_two function expects rgb or rgba input
-                        image_arrays.append(np.array(greyscale_array))
+                        if image.mode == 'L': # input image is already in greyscale
+                            image_arrays.append(image_array)
+                        else:
+                            greyscale_array = special_greyscale(image_array)
+                            # The interlace_two function expects both inputs to be the 
+                            # same shape and size
+                            image_arrays.append(greyscale_array)
 
                     elif ("darker" == operations[i]):
                         darker_image = darken(image_array)
-                        image_arrays.append(np.array(darker_image))
+                        image_arrays.append(darker_image)
 
                     elif ("dithering" == operations[i]):
                         dithered_image = ordered_dithering(image)
-                        image_arrays.append(np.array(dithered_image))
+                        image_arrays.append(dithered_image)
 
                     elif ("autolvl" == operations[i]):
                         auto_lvl_image = auto_lvl(image_array)
-                        image_arrays.append(np.array(auto_lvl_image))
+                        image_arrays.append(auto_lvl_image)
 
                     elif ("saturation" == operations[i]):
-                        saturated_image = saturated_image(image_array)
-                        image_arrays.append(np.array(saturated_image))
+                        saturated_image = saturation(image_array)
+                        image_arrays.append(saturated_image)
 
                     elif ("brighter" == operations[i]):
                         brighter_image = brighten(image_array)
-                        image_arrays.append(np.array(brighter_image))
+                        image_arrays.append(brighter_image)
 
                     elif ("interlaced" == operations[i]):
                         interlaced_image = interlace(image_array)
-                        image_arrays.append(np.array(interlaced_image))
+                        image_arrays.append(interlaced_image)
 
                     elif ("darken_grey" == operations[i]):
                         greyscale_image = image.convert('L')
-                        darker_image = darken(np.array(greyscale_image))
-                        image_arrays.append(np.array(darker_image))
+                        darker_image = darken(greyscale_image)
+                        image_arrays.append(darker_image)
 
                     elif ("auto_and_saturate" == operations[i]):
                         auto_lvl_image = auto_lvl(image_array)
-                        auto_lvl_saturated_image = saturation(np.array(auto_lvl_image))
-                        image_arrays.append(np.array(auto_lvl_saturated_image))                        
+                        auto_lvl_saturated_image = saturation(auto_lvl_image)
+                        image_arrays.append(auto_lvl_saturated_image)                        
 
                     elif ("blurred" == operations[i]):
                         blurred_image = blur(image_array)
-                        image_arrays.append(np.array(blurred_image))
+                        image_arrays.append(blurred_image)
 
                 new_image = interlace_two(image_arrays[0], image_arrays[1])
                 return save_file(filename, new_image, "interlaced")

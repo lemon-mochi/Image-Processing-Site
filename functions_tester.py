@@ -12,6 +12,7 @@ if image.mode == "P":
     image = image.convert("RGB")
 image = image.convert('L')
 image_array = functions.np.array(image).astype(functions.np.uint8)
+brighten_array = functions.np.array(functions.brighten(image_array))
 
-new_image = functions.blur(image_array)
-new_image.save(f'testing/{sys.argv[1]}')
+new_image = functions.interlace(image_array)
+Image.fromarray(new_image).save(f'testing/{sys.argv[1]}')

@@ -21,8 +21,7 @@ def darken(image_array):
     else: # weird format
         image_array = (image_array // 2).astype(np.uint8)
 
-    # Convert back to PIL Image
-    return Image.fromarray(image_array)
+    return image_array
     
 # IMPORTANT: unlike other functions, this function takes an image as input
 def ordered_dithering(image):
@@ -45,8 +44,7 @@ def ordered_dithering(image):
     # Perform the ordered dithering: compare each pixel to the Bayer matrix value
     dithered_image_array = (image_array > tiled_matrix).astype(np.uint8) * 255
 
-    # Convert back to a PIL image
-    return Image.fromarray(dithered_image_array)
+    return dithered_image_array
 
 def auto_lvl(image_array):
     # Processing for grayscale
@@ -82,8 +80,7 @@ def auto_lvl(image_array):
             a = image_array[:, :, 3]  # Alpha channel
             auto_lvl_array = np.stack([r, g, b, a], axis=2)
 
-    # Convert back to an image
-    return Image.fromarray(auto_lvl_array)
+    return auto_lvl_array
 
 def saturation(image_array):
     if len(image_array.shape) == 2:
@@ -102,7 +99,7 @@ def saturation(image_array):
         channels
     )
     saturated_array = reshaped.reshape(height, width, channels).astype(np.uint8)
-    return Image.fromarray(saturated_array)
+    return saturated_array
 
 def brighten(image_array):
     if image_array.shape[-1] == 3: # RGB
@@ -111,7 +108,7 @@ def brighten(image_array):
     elif image_array.shape[-1] == 4: # contains an alpha channel
         image_array[:, :, :3] = (image_array[:, :, :3] * 1.25)
 
-    elif len(image_array.shape == 2): # probably greyscale
+    elif len(image_array.shape) == 2: # probably greyscale
         image_array = image_array * 1.25
     
     else: # weird format
@@ -120,27 +117,30 @@ def brighten(image_array):
     image_array = np.clip(image_array, 0, 255)  # Clip to ensure values are within [0, 255]
     image_array = image_array.astype(np.uint8)  # Convert back to uint8 after clipping
     
-    # Convert back to PIL Image
-    return Image.fromarray(image_array)
+    return image_array
 
 def interlace(image_array):
+    # store the greyscale boolean test so that the computer does not need
+    # to check the length twice    
+    greyScaleFlag = False
     if len(image_array.shape) == 2:
         height, width = image_array.shape
-        channels = 1
+        reshaped = image_array.reshape(height, width)
+        greyScaleFlag = True
+
     else:
         # Get the shape of the image array (height, width, channels)
         height, width, channels = image_array.shape
-    
-    # Reshape the array to have each row be as one
-    reshaped = image_array.reshape(height, width * channels)
 
-    # I have to set type to int because the default is an 8 bit int which is too small
+        # Reshape the array to have each row be as one
+        reshaped = image_array.reshape(height, width * channels)
+
     df = pd.DataFrame(reshaped)
     
     odd_mask = df.index % 2 != 0
 
     # set every odd row to 0
-    if (channels == 3 or channels == 1):
+    if (greyScaleFlag or channels == 3):
         df.loc[odd_mask, :] = 0
     elif channels == 4:
         cols_to_modify = [col for col in df.columns if (col + 1) % 4 != 0]
@@ -148,39 +148,51 @@ def interlace(image_array):
     else:
         return Image.fromarray(image_array)
 
-
     new_reshaped = df.to_numpy(dtype=np.uint8)
-    interlaced_arary = new_reshaped.reshape(height, width, channels)
 
-    return Image.fromarray(interlaced_arary)
+    if (greyScaleFlag):
+        interlaced_arary = new_reshaped.reshape(height, width)
+    else:
+        interlaced_arary = new_reshaped.reshape(height, width, channels)
+
+    return interlaced_arary
 
 # for this function, the two arrays must have the same size and shape, 
 # otherwise an error will occur
 def interlace_two(image_array1, image_array2):
+    # store the greyscale boolean test so that the computer does not need
+    # to check the length twice
+    greyscaleFlag = False
     if len(image_array1.shape) == 2:
         height, width = image_array1.shape
-        channels = 1
+        reshaped1 = image_array1.reshape(height, width)
+        reshaped2 = image_array2.reshape(height, width)
+        greyscaleFlag = True
+
     else:
         height, width, channels = image_array1.shape
-
-    reshaped1 = image_array1.reshape(height, width * channels)
-    reshaped2 = image_array2.reshape(height, width * channels)
+        reshaped1 = image_array1.reshape(height, width * channels)
+        reshaped2 = image_array2.reshape(height, width * channels)
 
     df1 = pd.DataFrame(reshaped1)
     df2 = pd.DataFrame(reshaped2)
 
     odd_mask = df1.index % 2 != 0
 
-    if (channels == 3 or channels == 1):
+    if (greyscaleFlag or channels == 3):
         df1.loc[odd_mask, :] = df2.loc[odd_mask, :]
     elif channels == 4:
         cols_to_modify = [col for col in df1.columns if (col + 1) % 4 != 0]
         df1.loc[odd_mask, cols_to_modify] = df2.loc[odd_mask, :]
 
     new_reshaped = df1.to_numpy(dtype=np.uint8)
-    interlaced_array = new_reshaped.reshape(height, width, channels)
 
-    return Image.fromarray(interlaced_array)
+    if greyscaleFlag:
+        interlaced_array = new_reshaped.reshape(height, width)
+    else:    
+        interlaced_array = new_reshaped.reshape(height, width, channels)
+
+    return interlaced_array
 
 def blur(image_array):
     if len(image_array.shape) == 2: # greyscale image
@@ -234,12 +246,12 @@ def blur(image_array):
 
         blurred_array = outputC.reshape(height, width, channels)
 
-    return Image.fromarray(blurred_array)
+    return blurred_array
 
 # Since the interlace_two function expects the two images to have the same size and shape, the
 # regular greyscale method will not do as it creates a 1-dimensional array. The best way is 
 # probably to create a new image which maintains the original format but all of the rgb values
-# are the same so that it creates a greyscale image
+# are the same so that it creates a greyscale image. This function assumes a 
 def special_greyscale(image_array):
     r, g, b = image_array[:, :, 0], image_array[:, :, 1], image_array[:, :, 2]
     greyscale = 0.299 * r + 0.587 * g + 0.114 * b
@@ -247,6 +259,3 @@ def special_greyscale(image_array):
     # Expand greyscale to three channels
     greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
     return greyscale
-
-def crtFilter(image_array):
-    
