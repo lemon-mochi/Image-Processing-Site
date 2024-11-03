@@ -37,7 +37,7 @@ def index_operation(image, operation):
 
     elif ("darken_grey" == operation):
         greyscale_array = image.convert('L')
-        darker_array = darken(greyscale_array)
+        darker_array = darken(np.array(greyscale_array))
         return Image.fromarray(darker_array)
     
     elif ("auto_and_saturate" == operation):
