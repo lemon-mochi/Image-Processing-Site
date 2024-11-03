@@ -14,10 +14,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_file(filename, new_array, operation):
+def save_file(filename, new_image, operation):
     new_filename = f"{operation}_{filename}"
     new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-    Image.fromarray(new_array).save(new_filepath)
+    new_image.save(new_filepath)
     # Redirect to the display route with the filenames as parameters
     return redirect(url_for('display_images', original_image=filename, modified_image=new_filename))
 
@@ -47,15 +47,15 @@ def index():
                 
             # User wanted to modify the image from index.html
             if (operation != None):
-                new_array = index_operation(image, operation)
+                new_image = index_operation(image, operation)
                 
-                return save_file(filename, new_array, operation)
+                return save_file(filename, new_image, operation)
             
             # handling the case where the user wanted to interlace two modifications
             if (operation1 != None):
-                new_array = interlace_operation(image, operation0, operation1)
+                new_image = interlace_operation(image, operation0, operation1)
 
-                return save_file(filename, new_array, "interlaced")
+                return save_file(filename, new_image, f"{operation0}_{operation1}_interlaced")
 
     return render_template('index.html')
 

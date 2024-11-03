@@ -8,46 +8,46 @@ def index_operation(image, operation):
     image_array = np.array(image)
 
     if ("greyscale" == operation):
-        greyscale_array = image.convert('L')
-        return greyscale_array
+        greyscale_image = image.convert('L')
+        return greyscale_image
     
     elif ("darker" == operation):
         darker_array = darken(image_array)
-        return darker_array
+        return Image.fromarray(darker_array)
     
     elif ("dithering" == operation):
         dithered_array = ordered_dithering(image)
-        return dithered_array
+        return Image.fromarray(dithered_array)
 
     elif ("autolvl" == operation):
         auto_lvl_array = auto_lvl(image_array)
-        return auto_lvl_array
+        return Image.fromarray(auto_lvl_array)
 
     elif ("saturation" == operation):
         saturated_array = saturation(image_array)
-        return saturated_array
+        return Image.fromarray(saturated_array)
 
     elif ("brighter" == operation):
         brighter_array = brighten(image_array)
-        return brighter_array
+        return Image.fromarray(brighter_array)
     
     elif ("interlaced" == operation):
         interlaced_array = interlace(image_array)
-        return interlaced_array
+        return Image.fromarray(interlaced_array)
 
     elif ("darken_grey" == operation):
         greyscale_array = image.convert('L')
         darker_array = darken(greyscale_array)
-        return darker_array
+        return Image.fromarray(darker_array)
     
     elif ("auto_and_saturate" == operation):
         auto_lvl_array = auto_lvl(image_array)
         auto_lvl_saturated_array = saturation(auto_lvl_array)
-        return auto_lvl_saturated_array
+        return Image.fromarray(auto_lvl_saturated_array)
 
     elif ("blurred" == operation):
         blurred_array = blur(image_array)
-        return blurred_array
+        return Image.fromarray(blurred_array)
     
 def interlace_operation(image, operation0, operation1):
     image_array = np.array(image)
@@ -117,4 +117,4 @@ def interlace_operation(image, operation0, operation1):
             image_arrays.append(blurred_array)
 
     new_array = interlace_two(image_arrays[0], image_arrays[1])
-    return new_array
+    return Image.fromarray(new_array)
