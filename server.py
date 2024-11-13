@@ -47,17 +47,27 @@ def index():
                 
             # User wanted to modify the image from index.html
             if (operation != None):
+                if (operation == ''):
+                    return render_template('index.html')
+
                 new_image = index_operation(image, operation)
                 
                 return save_file(filename, new_image, operation)
             
             # handling the case where the user wanted to interlace two modifications
-            if (operation1 != None):
+            else:
+                if (operation0 == '' or operation1 == ''):
+                    return render_template('interlace_two.html')
+
                 new_image = interlace_operation(image, operation0, operation1)
 
                 return save_file(filename, new_image, f"{operation0}_{operation1}_interlaced")
 
-    return render_template('index.html')
+    if (operation != None):
+        return render_template('index.html')
+    else:
+        return render_template('interlace_two.html')
+    
 
 @app.route('/interlace_two')
 def interlace_two_html():
