@@ -13,5 +13,9 @@ The `gcc` compiler is also needed to create the shared library
 
 ## Creating the shared library
 ```
-cc -fPIC -shared my_functions.c -o my_functions.so
+make
+```
+To delete type
+```
+make clean
 ```
