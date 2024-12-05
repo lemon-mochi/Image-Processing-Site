@@ -63,11 +63,7 @@ def index():
 
                 return save_file(filename, new_image, f"{operation0}_{operation1}_interlaced")
 
-    if (operation != None):
-        return render_template('index.html')
-    else:
-        return render_template('interlace_two.html')
-    
+    return render_template('index.html')
 
 @app.route('/interlace_two')
 def interlace_two_html():
