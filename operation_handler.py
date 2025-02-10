@@ -2,119 +2,48 @@
 # Written by Gen Blaine
 # Nov. 2, 2024
 # This file handles the user's input from the two input pages
+# On Feb. 10, 2025, I decided to make big changes to this 
+# code so that it uses a dictionary for O(1) lookup.
 from functions import *
 
 def index_operation(image, operation):
     image_array = np.array(image)
 
-    if ("greyscale" == operation):
-        greyscale_image = image.convert('L')
-        return greyscale_image
-    
-    elif ("darker" == operation):
-        darker_array = darken(image_array)
-        return Image.fromarray(darker_array)
-    
-    elif ("dithering" == operation):
-        dithered_array = ordered_dithering(image)
-        return Image.fromarray(dithered_array)
+    operations = {
+        "greyscale": lambda img: img.convert('L'),
+        "darker": lambda img: Image.fromarray(darken(np.array(img))),
+        "dithering": lambda img: Image.fromarray(ordered_dithering(img)),
+        "autolvl": lambda img: Image.fromarray(auto_lvl(np.array(img))),
+        "saturation": lambda img: Image.fromarray(saturation(np.array(img))),
+        "brighter": lambda img: Image.fromarray(brighten(np.array(img))),
+        "interlaced": lambda img: Image.fromarray(interlace(np.array(img))),
+        "darken_grey": lambda img: Image.fromarray(darken(np.array(img.convert('L')))),
+        "auto_and_saturate": lambda img: Image.fromarray(saturation(auto_lvl(np.array(img)))),
+        "blurred": lambda img: Image.fromarray(blur(np.array(img)))
+    }
 
-    elif ("autolvl" == operation):
-        auto_lvl_array = auto_lvl(image_array)
-        return Image.fromarray(auto_lvl_array)
+    return operations.get(operation, lambda img: img)(image)  # Default to returning the original image
 
-    elif ("saturation" == operation):
-        saturated_array = saturation(image_array)
-        return Image.fromarray(saturated_array)
-
-    elif ("brighter" == operation):
-        brighter_array = brighten(image_array)
-        return Image.fromarray(brighter_array)
-    
-    elif ("interlaced" == operation):
-        interlaced_array = interlace(image_array)
-        return Image.fromarray(interlaced_array)
-
-    elif ("darken_grey" == operation):
-        greyscale_array = image.convert('L')
-        darker_array = darken(np.array(greyscale_array))
-        return Image.fromarray(darker_array)
-    
-    elif ("auto_and_saturate" == operation):
-        auto_lvl_array = auto_lvl(image_array)
-        auto_lvl_saturated_array = saturation(auto_lvl_array)
-        return Image.fromarray(auto_lvl_saturated_array)
-
-    elif ("blurred" == operation):
-        blurred_array = blur(image_array)
-        return Image.fromarray(blurred_array)
     
 def interlace_operation(image, operation0, operation1):
     image_array = np.array(image)
     operations = [operation0, operation1]
-    image_arrays = []
+    
+    operation_dict = {
+        "original": lambda img: np.array(img),
+        "greyscale": lambda img: np.array(img) if img.mode == 'L' else special_greyscale(np.array(img)),
+        "darker": lambda img: darken(np.array(img)),
+        "dithering": lambda img: np.array(Image.fromarray(ordered_dithering(img)).convert(img.mode) if img.mode != 'L' else ordered_dithering(img)),
+        "autolvl": lambda img: auto_lvl(np.array(img)),
+        "saturation": lambda img: saturation(np.array(img)),
+        "brighter": lambda img: brighten(np.array(img)),
+        "interlaced": lambda img: interlace(np.array(img)),
+        "darken_grey": lambda img: darken(np.array(img)) if img.mode == 'L' else darken(special_greyscale(np.array(img))),
+        "auto_and_saturate": lambda img: saturation(auto_lvl(np.array(img))),
+        "blurred": lambda img: blur(np.array(img))
+    }
 
-    for i in range(2):
-        if ("original" == operations[i]):
-            image_arrays.append(image_array)
-
-        elif ("greyscale" == operations[i]):
-            if image.mode == 'L': # input image is already in greyscale
-                image_arrays.append(image_array)
-            else:
-                greyscale_array = special_greyscale(image_array)
-                # The interlace_two function expects both inputs to be the 
-                # same shape and size
-                image_arrays.append(greyscale_array)
-
-        elif ("darker" == operations[i]):
-            darker_array = darken(image_array)
-            image_arrays.append(darker_array)
-
-        elif ("dithering" == operations[i]):
-            dithered_array = ordered_dithering(image)
-            # here, dithered_image is a 2-d array. If the original
-            # is different, we must set the dithered_image to whatever the heck
-            # the original image's mode is. This is because interlace two requires
-            # the two images to be the same shape.
-            if (image.mode != 'L'):
-                dithered_image = Image.fromarray(dithered_array).convert(image.mode)
-                dithered_array = np.array(dithered_image)
-
-            image_arrays.append(dithered_array)
-
-        elif ("autolvl" == operations[i]):
-            auto_lvl_array = auto_lvl(image_array)
-            image_arrays.append(auto_lvl_array)
-
-        elif ("saturation" == operations[i]):
-            saturated_array = saturation(image_array)
-            image_arrays.append(saturated_array)
-
-        elif ("brighter" == operations[i]):
-            brighter_array = brighten(image_array)
-            image_arrays.append(brighter_array)
-
-        elif ("interlaced" == operations[i]):
-            interlaced_array = interlace(image_array)
-            image_arrays.append(interlaced_array)
-
-        elif ("darken_grey" == operations[i]):
-            if image.mode == 'L': # already greyscale
-                image_arrays.append(image_array)
-            else:
-                greyscale_array = special_greyscale(image_array)
-                darker_array = darken(greyscale_array)
-                image_arrays.append(darker_array)
-
-        elif ("auto_and_saturate" == operations[i]):
-            auto_lvl_array = auto_lvl(image_array)
-            auto_lvl_saturated_array = saturation(auto_lvl_array)
-            image_arrays.append(auto_lvl_saturated_array)                        
-
-        elif ("blurred" == operations[i]):
-            blurred_array = blur(image_array)
-            image_arrays.append(blurred_array)
+    image_arrays = [operation_dict.get(op, lambda img: np.array(img))(image) for op in operations]
 
     new_array = interlace_two(image_arrays[0], image_arrays[1])
     return Image.fromarray(new_array)
