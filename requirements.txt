@@ -1,0 +1,5 @@
+pip==22.0.2
+Flask==3.0.3
+pandas==2.2.3
+pillow==11.0.0
+numpy==2.1.3
