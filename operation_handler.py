@@ -19,7 +19,8 @@ def index_operation(image, operation):
         "interlaced": lambda img: Image.fromarray(interlace(np.array(img))),
         "darken_grey": lambda img: Image.fromarray(darken(np.array(img.convert('L')))),
         "auto_and_saturate": lambda img: Image.fromarray(saturation(auto_lvl(np.array(img)))),
-        "blurred": lambda img: Image.fromarray(blur(np.array(img)))
+        "blurred": lambda img: Image.fromarray(blur(np.array(img))),
+        "balance": lambda img: Image.fromarray(balance(np.array(img)))
     }
 
     return operations.get(operation, lambda img: img)(image)  # Default to returning the original image

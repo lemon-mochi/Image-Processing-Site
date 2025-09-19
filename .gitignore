@@ -8,3 +8,5 @@
 *.webp
 *.jfif
 *static/uploads/*
+myenv
+testing

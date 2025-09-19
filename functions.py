@@ -5,6 +5,7 @@ from PIL import Image
 import pandas as pd
 import sys
 import ctypes
+import cv2
 
 my_functions = ctypes.CDLL('./my_functions.so')
 
@@ -95,7 +96,7 @@ def saturation(image_array):
     my_functions.saturate.argtypes = (ctypes.POINTER(ctypes.c_short), ctypes.c_int, ctypes.c_int)
     my_functions.saturate(
         reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_short)),
-        reshaped.size, 
+        reshaped.size,
         channels
     )
     saturated_array = reshaped.reshape(height, width, channels).astype(np.uint8)
@@ -271,3 +272,31 @@ def special_greyscale(image_array):
         greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
     
     return greyscale
+
+def to_float(img):
+    return img.astype(np.float32) / 255.0
+
+def balance(image_array):
+    base = to_float(image_array)
+    # --- Generate exposures ---
+    dark_arrays = []
+    I_dark = image_array.copy()
+    for _ in range(4):
+        I_dark = darken(I_dark)
+        dark_arrays.append(I_dark)
+
+    bright_arrays = []
+    I_bright = image_array.copy()
+    for _ in range(4):
+        I_bright = brighten(I_bright)
+        bright_arrays.append(I_bright)
+
+    exposures = [image_array] + dark_arrays + bright_arrays
+
+    # Exposure fusion using Mertens
+    merge_mertens = cv2.createMergeMertens()
+    res_mertens = merge_mertens.process(exposures)
+
+    res_mertens_8bit = np.clip(res_mertens*255, 0, 255).astype('uint8')
+
+    return auto_lvl(res_mertens_8bit)
