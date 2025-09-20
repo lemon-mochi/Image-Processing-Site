@@ -9,4 +9,5 @@
 *.jfif
 *static/uploads/*
 myenv
+myvenv
 testing
