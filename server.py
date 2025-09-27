@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 from operation_handler import index_operation, interlace_operation, Image
+from models import insert_image, get_image
 
 app = Flask(__name__)
 
@@ -18,8 +19,10 @@ def save_file(filename, new_image, operation):
     new_filename = f"{operation}_{filename}"
     new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
     new_image.save(new_filepath)
+
+    image_id = insert_image(filename, new_filename, operation)
     # Redirect to the display route with the filenames as parameters
-    return redirect(url_for('display_images', original_image=filename, modified_image=new_filename))
+    return redirect(url_for('display_image_by_id', image_id=image_id))
 
 # Home page where users can upload an image
 @app.route('/', methods=['GET', 'POST'])
@@ -69,10 +72,13 @@ def index():
 def interlace_two_html():
     return render_template('interlace_two.html')
 
-# New route to display the original and modified images
-@app.route('/display/<original_image>/<modified_image>')
-def display_images(original_image, modified_image):
-    return render_template('display.html', original_image=original_image, modified_image=modified_image)
+@app.route('/display/<int:image_id>')
+def display_image_by_id(image_id):
+    row = get_image(image_id)
+    if row is None:
+        return "Image not found", 404
+    original, modified = row
+    return render_template('display.html', original_image=original, modified_image=modified)
 
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):

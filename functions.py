@@ -277,7 +277,11 @@ def to_float(img):
     return img.astype(np.float32) / 255.0
 
 def balance(image_array):
-    base = to_float(image_array)
+    _, _, channels = image_array.shape
+    if (channels == 4):
+        alpha_channel = image_array[:, :, 3]
+        image_array = image_array[:, :, 0:3]
+
     # --- Generate exposures ---
     dark_arrays = []
     I_dark = image_array.copy()
@@ -298,5 +302,8 @@ def balance(image_array):
     res_mertens = merge_mertens.process(exposures)
 
     res_mertens_8bit = np.clip(res_mertens*255, 0, 255).astype('uint8')
+    
+    if (channels == 4): 
+        res_mertens_8bit = np.dstack((res_mertens_8bit, alpha_channel))
 
     return auto_lvl(res_mertens_8bit)
