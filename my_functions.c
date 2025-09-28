@@ -541,10 +541,6 @@ void colours1(
     int len2, int new_rows, int new_cols, int type
 ) {
 
-    long new_size = new_cols * new_rows * channels;
-    if (type == 2)
-        new_size *= 2;
-
     // x will keep track of which row the loop is on
     int x;
     // y will keep track of which column the loop is on
@@ -559,7 +555,6 @@ void colours1(
             x = i / new_cols;
             y = i % new_cols;
 
-            // find what the original pixel is supposed to be
             og_x = x / 2;
             og_y = y / 2;
 
@@ -567,12 +562,11 @@ void colours1(
             outputArray[i] = inputArray[og_pixel];
         }
     } else {
-        long j = new_size;
+        long j = (type == 1) ? len2 : len2 * 2;
         for (int i = 0; i < len2; i += channels) {
             x = (j / channels) / new_cols;
             y = (j / channels) % new_cols;
 
-            // find what the original pixel is supposed to be
             og_x = x / 2;
             og_y = y / 2;
 

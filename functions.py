@@ -359,7 +359,7 @@ def distort(image_array, type=1):
         my_functions.distort2.argtypes = (
             ctypes.c_int,
             ctypes.c_int,
-            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte),
             ctypes.POINTER(ctypes.c_ubyte),
             ctypes.c_int,
             ctypes.c_int,
@@ -378,15 +378,15 @@ def distort(image_array, type=1):
             new_size,
             new_height,
             new_width
-        )        
+        )
 
     newOutputC = np.zeros(new_size).astype(np.uint8)
     my_functions.blur.argtypes = (
         ctypes.c_int,
-        ctypes.c_int, 
-        ctypes.POINTER(ctypes.c_ubyte), 
-        ctypes.POINTER(ctypes.c_ubyte), 
-        ctypes.c_int, 
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.c_int,
         ctypes.c_int
     )
 
@@ -417,7 +417,7 @@ def distort(image_array, type=1):
             ctypes.c_int,
             ctypes.c_int
         )
-        
+
         my_functions.enlarge(
             height,
             width,
@@ -447,7 +447,7 @@ def upscale(image_array):
     my_functions.enlarge.argtypes = (
         ctypes.c_int,
         ctypes.c_int,
-        ctypes.POINTER(ctypes.c_ubyte), 
+        ctypes.POINTER(ctypes.c_ubyte),
         ctypes.POINTER(ctypes.c_ubyte),
         ctypes.c_int,
         ctypes.c_int,
@@ -471,10 +471,10 @@ def upscale(image_array):
     newOutputC = np.zeros(new_size).astype(np.uint8)
     my_functions.blur.argtypes = (
         ctypes.c_int,
-        ctypes.c_int, 
+        ctypes.c_int,
         ctypes.POINTER(ctypes.c_ubyte),
         ctypes.POINTER(ctypes.c_ubyte),
-        ctypes.c_int, 
+        ctypes.c_int,
         ctypes.c_int
     )
 
@@ -533,7 +533,7 @@ def colours(image_array, type=1):
         ctypes.c_int, 
         ctypes.POINTER(ctypes.c_ubyte),
         ctypes.POINTER(ctypes.c_ubyte),
-        ctypes.c_int, 
+        ctypes.c_int,
         ctypes.c_int
     )
 
