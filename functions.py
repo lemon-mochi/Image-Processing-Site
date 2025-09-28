@@ -211,10 +211,10 @@ def blur(image_array):
         )
 
         my_functions.blurGrey(
-            height, 
+            height,
             width,
             reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
-            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
             size
         )
 
@@ -229,23 +229,25 @@ def blur(image_array):
 
         my_functions.blur.argtypes = (
             ctypes.c_int,
-            ctypes.c_int, 
-            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_ubyte),
             ctypes.POINTER(ctypes.c_ubyte), 
             ctypes.c_int, 
             ctypes.c_int
         )
 
         my_functions.blur(
-            height, 
-            width, 
-            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
-            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)), 
-            size, 
+            height,
+            width,
+            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            size,
             channels
         )
 
         blurred_array = outputC.reshape(height, width, channels)
+
+        print(blurred_array)
 
     return blurred_array
 
@@ -272,9 +274,6 @@ def special_greyscale(image_array):
         greyscale = np.stack((greyscale, greyscale, greyscale), axis=-1)
     
     return greyscale
-
-def to_float(img):
-    return img.astype(np.float32) / 255.0
 
 def balance(image_array):
     _, _, channels = image_array.shape
@@ -307,3 +306,246 @@ def balance(image_array):
         res_mertens_8bit = np.dstack((res_mertens_8bit, alpha_channel))
 
     return auto_lvl(res_mertens_8bit)
+
+def distort(image_array, type=1):
+    height, width, channels = image_array.shape
+
+    four_channel_flag = False
+    if (channels == 4):
+        four_channel_flag = True
+        alpha_channel = image_array[:, :, 3]
+        image_array = image_array[:, :, 0:3]
+        channels = 3
+
+    size = height * width * channels
+    reshaped = image_array.reshape(size)
+    if (type == 1):
+        new_height = height * 6
+        new_width = width * 2
+        new_size = size * 12
+        outputC = np.zeros(new_size).astype(np.uint8)
+
+
+        my_functions.distort1.argtypes = (
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        )
+
+        my_functions.distort1(
+            height,
+            width,
+            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            size,
+            channels,
+            new_size,
+            new_height,
+            new_width
+        )
+    
+    else:
+        new_height = height * 2
+        new_width = width * 6
+        new_size = size * 12
+        outputC = np.zeros(new_size).astype(np.uint8)
+
+        my_functions.distort2.argtypes = (
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        )
+
+        my_functions.distort2(
+            height,
+            width,
+            reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            size,
+            channels,
+            new_size,
+            new_height,
+            new_width
+        )        
+
+    newOutputC = np.zeros(new_size).astype(np.uint8)
+    my_functions.blur.argtypes = (
+        ctypes.c_int,
+        ctypes.c_int, 
+        ctypes.POINTER(ctypes.c_ubyte), 
+        ctypes.POINTER(ctypes.c_ubyte), 
+        ctypes.c_int, 
+        ctypes.c_int
+    )
+
+    my_functions.blur(
+        new_height,
+        new_width,
+        outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        newOutputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        new_size,
+        channels
+    )
+
+    new_array = newOutputC.reshape(new_height, new_width, channels)
+
+    if (four_channel_flag == True):
+        ogLen = height * width
+        alphaSize = ogLen * 12
+        newAlpha = np.zeros(alphaSize).astype(np.uint8)
+
+        my_functions.enlarge.argtypes = (
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_ubyte), 
+            ctypes.POINTER(ctypes.c_ubyte),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        )
+        
+        my_functions.enlarge(
+            height,
+            width,
+            alpha_channel.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            newAlpha.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+            ogLen,
+            1,
+            alphaSize,
+            new_height,
+            new_width
+        )
+        newAlpha = newAlpha.reshape(new_height, new_width)
+        new_array = np.dstack((new_array, newAlpha))
+
+    return new_array
+
+def upscale(image_array):
+    height, width, channels = image_array.shape
+
+    size = height * width * channels
+    reshaped = image_array.reshape(size)
+    new_height = height * 2
+    new_width = width * 2
+    new_size = size * 4
+    outputC = np.zeros(new_size).astype(np.uint8)
+
+    my_functions.enlarge.argtypes = (
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_ubyte), 
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int
+    )
+
+    my_functions.enlarge(
+        height,
+        width,
+        reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        size,
+        channels,
+        new_size,
+        new_height,
+        new_width
+    )
+
+    newOutputC = np.zeros(new_size).astype(np.uint8)
+    my_functions.blur.argtypes = (
+        ctypes.c_int,
+        ctypes.c_int, 
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.c_int, 
+        ctypes.c_int
+    )
+
+    my_functions.blur(
+        new_height,
+        new_width,
+        outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        newOutputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        new_size,
+        channels
+    )
+
+    new_array = newOutputC.reshape(new_height, new_width, channels)
+
+    return new_array
+
+def colours(image_array, type=1):
+    height, width, channels = image_array.shape
+
+    size = height * width * channels
+    reshaped = image_array.reshape(size)
+    new_height = height * 2
+    new_width = width * 2
+    new_size = size * 4
+    outputC = np.zeros(new_size).astype(np.uint8)
+
+    my_functions.colours1.argtypes = (
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_ubyte), 
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int
+    )
+
+    my_functions.colours1(
+        height,
+        width,
+        reshaped.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        size,
+        channels,
+        new_size,
+        new_height,
+        new_width,
+        type
+    )
+
+    newOutputC = np.zeros(new_size).astype(np.uint8)
+    my_functions.blur.argtypes = (
+        ctypes.c_int,
+        ctypes.c_int, 
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.POINTER(ctypes.c_ubyte),
+        ctypes.c_int, 
+        ctypes.c_int
+    )
+
+    my_functions.blur(
+        new_height,
+        new_width,
+        outputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        newOutputC.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte)),
+        new_size,
+        channels
+    )
+
+    new_array = newOutputC.reshape(new_height, new_width, channels)
+
+    return new_array

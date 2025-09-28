@@ -20,7 +20,12 @@ def index_operation(image, operation):
         "darken_grey": lambda img: Image.fromarray(darken(np.array(img.convert('L')))),
         "auto_and_saturate": lambda img: Image.fromarray(saturation(auto_lvl(np.array(img)))),
         "blurred": lambda img: Image.fromarray(blur(np.array(img))),
-        "balance": lambda img: Image.fromarray(balance(np.array(img)))
+        "balance": lambda img: Image.fromarray(balance(np.array(img))),
+        "distort1": lambda img: Image.fromarray(distort(np.array(img), 1)),
+        "distort2": lambda img: Image.fromarray(distort(np.array(img), 2)),
+        "upscale": lambda img: Image.fromarray(upscale(np.array(img))),
+        "colours1": lambda img: Image.fromarray(colours(np.array(img), 1)),
+        "colours2": lambda img: Image.fromarray(colours(np.array(img), 2)),
     }
 
     return operations.get(operation, lambda img: img)(image)  # Default to returning the original image

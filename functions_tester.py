@@ -13,5 +13,5 @@ if image.mode == "P":
 image_array = functions.np.array(image).astype(functions.np.uint8)
 brighten_array = functions.np.array(functions.brighten(image_array))
 
-new_image = functions.balance(image_array)
-Image.fromarray(new_image).save(f'testing/{sys.argv[1]}')
+new_image = functions.colours(image_array, 2)
+Image.fromarray(new_image).save(f'testing/colours_{sys.argv[1]}')

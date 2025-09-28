@@ -76,7 +76,8 @@ void saturate(short* array, int len, int channels) {
 // This function expects the input and output arrays to be the same size and shape 
 // (1-dimensional 8-bit unsigned integers)
 void blur(
-    int rows, int cols, unsigned char* inputArray, unsigned char* outputArray, int len, int channels
+    int rows, int cols, unsigned char* inputArray,
+    unsigned char* outputArray, int len, int channels
 ) {
     // x will keep track of which row the loop is on
     int x;
@@ -97,9 +98,14 @@ void blur(
         if (x == 0 && y == 0) {
             // need to consider pixel to right, pixel below, pixel on bottom right
             int bottomRightPixel = width + channels;
-            outputArray[0] = (inputArray[channels] + inputArray[width] + inputArray[bottomRightPixel]) / 3;
-            outputArray[1] = (inputArray[1 + channels] + inputArray[1 + width] + inputArray[1 + bottomRightPixel]) / 3;
-            outputArray[2] = (inputArray[2 + channels] + inputArray[2 + width] + inputArray[2 + bottomRightPixel]) / 3;
+            int r_value = (inputArray[channels] + inputArray[width] + inputArray[bottomRightPixel]) / 3;
+            outputArray[0] = r_value <= 255 ? r_value : 255;
+
+            int g_value = (inputArray[1 + channels] + inputArray[1 + width] + inputArray[1 + bottomRightPixel]) / 3;
+            outputArray[1] = g_value <= 255 ? g_value : 255;
+
+            int b_value = (inputArray[2 + channels] + inputArray[2 + width] + inputArray[2 + bottomRightPixel]) / 3;
+            outputArray[2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with top right pixel
@@ -108,9 +114,15 @@ void blur(
             int leftPixel = i - channels;
             int bottomPixel = i + width;
             int bottomLeftPixel = bottomPixel - channels;
-            outputArray[i] = (inputArray[leftPixel] + inputArray[bottomPixel] + inputArray[bottomLeftPixel]) / 3;
-            outputArray[i + 1] = (inputArray[1 + leftPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomLeftPixel]) / 3;
-            outputArray[i + 2] = (inputArray[2 + leftPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomLeftPixel]) / 3;
+
+            int r_value = (inputArray[leftPixel] + inputArray[bottomPixel] + inputArray[bottomLeftPixel]) / 3;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
+
+            int g_value = (inputArray[1 + leftPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomLeftPixel]) / 3;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
+
+            int b_value = (inputArray[2 + leftPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomLeftPixel]) / 3;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with bottom left pixel
@@ -119,9 +131,14 @@ void blur(
             int rightPixel = i + channels;
             int topPixel = i - width;
             int topRightPixel = topPixel + channels;
-            outputArray[i] = (inputArray[rightPixel] + inputArray[topPixel] + inputArray[topRightPixel]) / 3;
-            outputArray[i + 1] = (inputArray[1 + rightPixel] + inputArray[1 + topPixel] + inputArray[1 + topRightPixel]) / 3;
-            outputArray[i + 2] = (inputArray[2 + rightPixel] + inputArray[2 + topPixel] + inputArray[2 + topRightPixel]) / 3;
+            int r_value = (inputArray[rightPixel] + inputArray[topPixel] + inputArray[topRightPixel]) / 3;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
+
+            int g_value = (inputArray[1 + rightPixel] + inputArray[1 + topPixel] + inputArray[1 + topRightPixel]) / 3;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
+
+            int b_value = (inputArray[2 + rightPixel] + inputArray[2 + topPixel] + inputArray[2 + topRightPixel]) / 3;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with bottom right pixel
@@ -130,9 +147,14 @@ void blur(
             int leftPixel = len - channels;
             int topPixel = len - width;
             int topLeftPixel = topPixel - channels;
-            outputArray[i] = (inputArray[leftPixel] + inputArray[topPixel] + inputArray[topLeftPixel]) / 3;
-            outputArray[i + 1] = (inputArray[1 + leftPixel] + inputArray[1 + topPixel] + inputArray[1 + topLeftPixel]) / 3;
-            outputArray[i + 2] = (inputArray[2 + leftPixel] + inputArray[2 + topPixel] + inputArray[2 + topLeftPixel]) / 3;
+            int r_value = (inputArray[leftPixel] + inputArray[topPixel] + inputArray[topLeftPixel]) / 3;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
+
+            int g_value = (inputArray[1 + leftPixel] + inputArray[1 + topPixel] + inputArray[1 + topLeftPixel]) / 3;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
+
+            int b_value = (inputArray[2 + leftPixel] + inputArray[2 + topPixel] + inputArray[2 + topLeftPixel]) / 3;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with pixels on top row
@@ -144,17 +166,20 @@ void blur(
             int bottomLeftPixel = leftPixel + width;
             int bottomRigthPixel = rightPixel + width;
             
-            outputArray[i] = (
+            int r_value = (
                 inputArray[leftPixel] + inputArray[rightPixel] + inputArray[bottomPixel] + inputArray[bottomLeftPixel] + inputArray[bottomRigthPixel]
             ) / 5;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
 
-            outputArray[i + 1] = (
+            int g_value = (
                 inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomRigthPixel]
             ) / 5;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
 
-            outputArray[i + 2] = (
+            int b_value = (
                 inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomRigthPixel]
             ) / 5;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with pixels on bottom row
@@ -166,17 +191,20 @@ void blur(
             int topLeftPixel = leftPixel - width;
             int topRightPixel = rightPixel - width;
 
-            outputArray[i] = (
+            int r_value = (
                 inputArray[leftPixel] + inputArray[rightPixel] + inputArray[topPixel] + inputArray[topLeftPixel] + inputArray[topRightPixel]
             ) / 5;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
 
-            outputArray[i + 1] = (
+            int g_value = (
                 inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + inputArray[1 + topPixel] + inputArray[1 + topLeftPixel] + inputArray[1 + topRightPixel]
             ) / 5;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
 
-            outputArray[i + 2] = (
+            int b_value = (
                 inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + inputArray[2 + topPixel] + inputArray[2 + topLeftPixel] + inputArray[2 + topRightPixel]
-            ) / 5;         
+            ) / 5;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;         
         }
 
         // dealing with pixels on left column
@@ -188,17 +216,20 @@ void blur(
             int topRightPixel = rightPixel - width;
             int bottomRightPIxel = bottomPixel + channels;
 
-            outputArray[i] = (
+            int r_value = (
                 inputArray[topPixel] + inputArray[topRightPixel] + inputArray[rightPixel] + inputArray[bottomPixel] + inputArray[bottomRightPIxel] 
             ) / 5;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
 
-            outputArray[i + 1] = (
+            int g_value = (
                 inputArray[1 + topPixel] + inputArray[1 + topRightPixel] + inputArray[1 + rightPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomRightPIxel] 
             ) / 5;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
 
-            outputArray[i + 2] = (
+            int b_value = (
                 inputArray[2 + topPixel] + inputArray[2 + topRightPixel] + inputArray[2 + rightPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomRightPIxel] 
             ) / 5;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
 
         // dealing with pixels on right column
@@ -210,17 +241,20 @@ void blur(
             int bottomPixel = i + width;
             int bottomLeftPixel = bottomPixel - channels;
 
-            outputArray[i] = (
+            int r_value = (
                 inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[leftPixel] + inputArray[bottomLeftPixel] + inputArray[bottomPixel]
             ) / 5;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
 
-            outputArray[i + 1] = (
+            int g_value = (
                 inputArray[1 + topLeftPixel] + inputArray[1 + topPixel] + inputArray[1 + leftPixel] + inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomPixel]
             ) / 5;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
 
-            outputArray[i + 2] = (
+            int b_value = (
                 inputArray[2 + topLeftPixel] + inputArray[2 + topPixel] + inputArray[2 + leftPixel] + inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomPixel]
-            ) / 5;                                    
+            ) / 5;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;                                    
         }
 
         // pixels that are not in the corner or any edges
@@ -235,23 +269,26 @@ void blur(
             int bottomLeftPixel = bottomPixel - channels;
             int bottomRightPixel = bottomPixel + channels;
 
-            outputArray[i] = (
+            int r_value = (
                 inputArray[topLeftPixel] + inputArray[topPixel] + inputArray[topRightPixel] +
                 inputArray[leftPixel] + inputArray[rightPixel] + 
                 inputArray[bottomLeftPixel] + inputArray[bottomPixel] + inputArray[bottomRightPixel]
             ) / 8;
+            outputArray[i] = r_value <= 255 ? r_value : 255;
 
-            outputArray[i + 1] = (
+            int g_value = (
                 inputArray[1 + topLeftPixel] + inputArray[1 + topPixel] + inputArray[1 + topRightPixel] +
                 inputArray[1 + leftPixel] + inputArray[1 + rightPixel] + 
                 inputArray[1 + bottomLeftPixel] + inputArray[1 + bottomPixel] + inputArray[1 + bottomRightPixel]
             ) / 8;
+            outputArray[i + 1] = g_value <= 255 ? g_value : 255;
 
-            outputArray[i + 2] = (
+            int b_value = (
                 inputArray[2 + topLeftPixel] + inputArray[2 + topPixel] + inputArray[2 + topRightPixel] +
                 inputArray[2 + leftPixel] + inputArray[2 + rightPixel] + 
                 inputArray[2 + bottomLeftPixel] + inputArray[2 + bottomPixel] + inputArray[2 + bottomRightPixel]
             ) / 8;
+            outputArray[i + 2] = b_value <= 255 ? b_value : 255;
         }
         
         // for alpha channels, keep it as is
@@ -370,4 +407,180 @@ void blurGrey(int rows, int cols, unsigned char* inputArray, unsigned char* outp
             ) / 8;
         }
     }
+}
+
+void distort1(
+    int old_rows, int old_cols, unsigned char* inputArray,
+    unsigned char* outputArray, int len1, int channels, int len2, int new_rows, int new_cols
+) {
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    // og_x will keep track of which row the original pixel comes from
+    int og_x;
+    // og_y will keep track of which columns the original pixel comes from
+    int og_y;
+    if (channels == 1) {
+        for (int i = 0; i < len2; i++) {
+            x = i / new_cols;
+            y = i % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols + og_y;
+            outputArray[i] = inputArray[og_pixel];
+        }
+    } else {
+        for (int i = 0; i < len2; i += channels) {
+            x = (i / channels) / new_cols;
+            y = (i / channels) % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols + og_y;
+            outputArray[i] = inputArray[og_pixel];
+            outputArray[i + 1] = inputArray[og_pixel + 1];
+            outputArray[i + 2] = inputArray[og_pixel + 2];
+        }
+    }
+}
+
+void distort2(
+    int old_rows, int old_cols, unsigned char* inputArray,
+    unsigned char* outputArray, int len1, int channels, int len2, int new_rows, int new_cols
+) {
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    // og_x will keep track of which row the original pixel comes from
+    int og_x;
+    // og_y will keep track of which columns the original pixel comes from
+    int og_y;
+    if (channels == 1) {
+        for (int i = 0; i < len2; i++) {
+            x = i / new_cols;
+            y = i % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols + og_y;
+            outputArray[i] = inputArray[og_pixel];
+        }
+    } else {
+        for (int i = 0; i < len2; i += channels) {
+            x = (i / channels) / new_cols;
+            y = (i / channels) % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols * channels + og_y;
+            outputArray[i] = inputArray[og_pixel];
+            outputArray[i + 1] = inputArray[og_pixel + 1];
+            outputArray[i + 2] = inputArray[og_pixel + 2];
+        }
+    }
+}
+
+void enlarge(
+    int old_rows, int old_cols, unsigned char* inputArray,
+    unsigned char* outputArray, int len1, int channels, int len2, int new_rows, int new_cols
+) {
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    // og_x will keep track of which row the original pixel comes from
+    int og_x;
+    // og_y will keep track of which columns the original pixel comes from
+    int og_y;    
+    if (channels == 1) {
+        for (int i = 0; i < len2; i++) {
+            x = i / new_cols;
+            y = i % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols + og_y;
+            outputArray[i] = inputArray[og_pixel];
+        }
+    } else {
+        for (int i = 0; i < len2; i += channels) {
+            x = (i / channels) / new_cols;
+            y = (i / channels) % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = (og_x * old_cols + og_y) * channels;
+            for (int c = 0; c < channels; c++) {
+                outputArray[i + c] = inputArray[og_pixel + c]; 
+            }
+        }
+    }
+}
+
+void colours1(
+    int old_rows, int old_cols, unsigned char* inputArray,
+    unsigned char* outputArray, int len1, int channels,
+    int len2, int new_rows, int new_cols, int type
+) {
+
+    long new_size = new_cols * new_rows * channels;
+    if (type == 2)
+        new_size *= 2;
+
+    // x will keep track of which row the loop is on
+    int x;
+    // y will keep track of which column the loop is on
+    int y;
+
+    // og_x will keep track of which row the original pixel comes from
+    int og_x;
+    // og_y will keep track of which columns the original pixel comes from
+    int og_y;
+    if (channels == 1) {
+        for (int i = 0; i < len2; i++) {
+            x = i / new_cols;
+            y = i % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = og_x * old_cols + og_y;
+            outputArray[i] = inputArray[og_pixel];
+        }
+    } else {
+        long j = new_size;
+        for (int i = 0; i < len2; i += channels) {
+            x = (j / channels) / new_cols;
+            y = (j / channels) % new_cols;
+
+            // find what the original pixel is supposed to be
+            og_x = x / 2;
+            og_y = y / 2;
+
+            int og_pixel = (og_x * old_cols + og_y) * channels;
+            for (int c = 0; c < channels; c++) {
+                outputArray[i + c] = inputArray[og_pixel + c];
+            }
+            j += channels;
+        }
+    }    
 }
