@@ -247,8 +247,6 @@ def blur(image_array):
 
         blurred_array = outputC.reshape(height, width, channels)
 
-        print(blurred_array)
-
     return blurred_array
 
 # Since the interlace_two function expects the two images to have the same size and shape, the
